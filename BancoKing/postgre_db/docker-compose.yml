@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:13
+    container_name: programming_postgres
+    environment:
+      POSTGRES_USER: Programming
+      POSTGRES_PASSWORD: tE4m!
+      POSTGRES_DB: banco_king_users
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
