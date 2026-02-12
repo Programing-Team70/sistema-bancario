@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "m1pqrm1p0gY=",
+  "dgSpecHash": "ScUC2YYBSls=",
   "success": true,
-  "projectFilePath": "C:\\Users\\diego\\OneDrive\\Documentos\\Proyecto Taller\\BancoKing\\authentication-service\\auth-service\\src\\AuthService.Domain\\AuthService.Domain.csproj",
+  "projectFilePath": "C:\\Users\\diego\\OneDrive\\Documentos\\Repositorio\\sistema-bancario\\BancoKing\\authentication-service\\auth-service\\src\\AuthService.Domain\\AuthService.Domain.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\diego\\.nuget\\packages\\system.componentmodel.annotations\\5.0.0\\system.componentmodel.annotations.5.0.0.nupkg.sha512"
   ],

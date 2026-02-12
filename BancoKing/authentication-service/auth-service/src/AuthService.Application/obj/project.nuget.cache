@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "3UgZFr4pctQ=",
+  "dgSpecHash": "TyfALJGQtwQ=",
   "success": true,
-  "projectFilePath": "C:\\Users\\diego\\OneDrive\\Documentos\\Proyecto Taller\\BancoKing\\authentication-service\\auth-service\\src\\AuthService.Application\\AuthService.Application.csproj",
+  "projectFilePath": "C:\\Users\\diego\\OneDrive\\Documentos\\Repositorio\\sistema-bancario\\BancoKing\\authentication-service\\auth-service\\src\\AuthService.Application\\AuthService.Application.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\diego\\.nuget\\packages\\bouncycastle.cryptography\\2.5.1\\bouncycastle.cryptography.2.5.1.nupkg.sha512",
     "C:\\Users\\diego\\.nuget\\packages\\cloudinarydotnet\\1.27.7\\cloudinarydotnet.1.27.7.nupkg.sha512",
