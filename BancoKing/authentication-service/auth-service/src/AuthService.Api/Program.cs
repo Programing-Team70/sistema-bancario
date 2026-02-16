@@ -1,44 +1,144 @@
+using AuthService.Api.Extensions;
+using AuthService.Api.Middlewares;
+using AuthService.Api.ModelBinders;
+using AuthService.Persistence.Data;
+using NetEscapades.AspNetCore.SecurityHeaders.Infrastructure;
+using Serilog;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+System.Net.ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+
+builder.Host.UseSerilog((context, services, loggerConfiguration) =>
+    loggerConfiguration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services));
+
+builder.Services.AddControllers(options =>
+{
+    options.ModelBinderProviders.Insert(0, new FileDataModelBinderProvider());
+})
+.AddJsonOptions(o =>
+{
+    o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+});
+
+builder.Services.AddApiDocumentation();
+builder.Services.AddApplicationServices(builder.Configuration);
+builder.Services.AddJwtAuthentication(builder.Configuration);
+builder.Services.AddRateLimitingPolicies();
+
+builder.Services.AddSecurityPolicies(builder.Configuration);
+builder.Services.AddSecurityOptions();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+app.UseSerilogRequestLogging();
+
+app.UseSecurityHeaders(policies => policies
+    .AddDefaultSecurityHeaders()
+    .RemoveServerHeader()
+    .AddFrameOptionsDeny()
+    .AddXssProtectionBlock()
+    .AddContentTypeOptionsNoSniff()
+    .AddReferrerPolicyStrictOriginWhenCrossOrigin()
+    .AddContentSecurityPolicy(builder =>
+    {
+        builder.AddDefaultSrc().Self();
+        builder.AddScriptSrc().Self().UnsafeInline();
+        builder.AddStyleSrc().Self().UnsafeInline();
+        builder.AddImgSrc().Self().Data();
+        builder.AddFontSrc().Self().Data();
+        builder.AddConnectSrc().Self();
+        builder.AddFrameAncestors().None();
+        builder.AddBaseUri().Self();
+        builder.AddFormAction().Self();
+    })
+    .AddCustomHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+    .AddCustomHeader("Cache-Control", "no-store, no-cache, must-revalidate, private")
+);
+
+app.UseMiddleware<GlobalExceptionMiddleware>();
+
 app.UseHttpsRedirection();
+app.UseCors("DefaultCorsPolicy");
+app.UseRateLimiter();
+app.UseAuthentication();
+app.UseAuthorization();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+app.MapControllers();
 
-app.MapGet("/weatherforecast", () =>
+app.MapHealthChecks("/health");
+
+app.MapGet("/health", () =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
+    var response = new
+    {
+        status = "Saludable",
+        timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+    };
+    return Results.Ok(response);
+});
+
+app.MapHealthChecks("/api/v1/health");
+
+var startupLogger = app.Services.GetRequiredService<ILogger<Program>>();
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    try
+    {
+        var server = app.Services.GetRequiredService<IServer>();
+        var addressesFeature = server.Features.Get<IServerAddressesFeature>();
+        var addresses = (IEnumerable<string>?)addressesFeature?.Addresses ?? app.Urls;
+
+        if (addresses != null && addresses.Any())
+        {
+            foreach (var addr in addresses)
+            {
+                var health = $"{addr.TrimEnd('/')}/health";
+                startupLogger.LogInformation("API de AuthService está ejecutándose en {Url}. Endpoint de salud: {HealthUrl}", addr, health);
+            }
+        }
+        else
+        {
+            startupLogger.LogInformation("API de AuthService iniciada. Endpoint de salud: /health");
+        }
+    }
+    catch (Exception ex)
+    {
+        startupLogger.LogWarning(ex, "Fallo al determinar las direcciones de escucha para el log de inicio");
+    }
+});
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        logger.LogInformation("Verificando conexión a la base de datos...");
+
+        await context.Database.EnsureCreatedAsync();
+
+        logger.LogInformation("Base de datos lista. Ejecutando datos semilla...");
+        await DataSeeder.SeendAsync(context);
+
+        logger.LogInformation("Inicialización de base de datos completada exitosamente");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Ocurrió un error al inicializar la base de datos");
+        throw; 
+    }
+}
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
