@@ -104,8 +104,19 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     .ValueGeneratedOnAdd();
                 entity.Property(e => e.UserId)
                     .HasMaxLength(16);
-                entity.Property(e => e.ProfilePicture).HasDefaultValue("");
-                entity.Property(e => e.Phone).HasMaxLength(8);
+                entity.Property(e => e.Address)
+                    .HasMaxLength(50);
+                entity.Property(e => e.JobName)
+                    .HasMaxLength(50);
+                entity.Property(e => e.DPI)
+                    .IsRequired()
+                    .HasMaxLength(13);
+                entity.Property(e => e.Phone)
+                    .HasMaxLength(8);
+                entity.Property(e => e.MonthlyIncome)
+                    .IsRequired()
+                    .HasColumnType("decimal(18,2)");
+                entity.HasIndex(e => e.DPI).IsUnique();
             });
 
             modelBuilder.Entity<Role>(entity =>
@@ -151,8 +162,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     .ValueGeneratedOnAdd();
                 entity.Property(e => e.UserId)
                     .HasMaxLength(16);
-                entity.Property(e => e.EmailVerified).HasDefaultValue(false);
-                entity.Property(e => e.EmailVerificationToken).HasMaxLength(256);
+                entity.Property(e => e.EmailVerified)
+                    .HasDefaultValue(false);
+                entity.Property(e => e.EmailVerificationToken)
+                    .HasMaxLength(256);
             });
 
             modelBuilder.Entity<UserPasswordReset>(entity =>
@@ -163,7 +176,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     .ValueGeneratedOnAdd();
                 entity.Property(e => e.UserId)
                     .HasMaxLength(16);
-                entity.Property(e => e.PasswordResetToken).HasMaxLength(256);
+                entity.Property(e => e.PasswordResetToken)
+                    .HasMaxLength(256);
             });
         });
     }

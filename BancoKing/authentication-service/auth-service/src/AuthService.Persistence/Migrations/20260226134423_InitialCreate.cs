@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AuthService.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialAdded : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -91,7 +91,10 @@ namespace AuthService.Persistence.Migrations
                 {
                     id = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: false),
                     user_id = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: false),
-                    profile_picture = table.Column<string>(type: "character varying(250)", maxLength: 250, nullable: false, defaultValue: ""),
+                    monthly_income = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    address = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    job_name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    dpi = table.Column<string>(type: "character varying(13)", maxLength: 13, nullable: false),
                     phone = table.Column<string>(type: "character varying(8)", maxLength: 8, nullable: false)
                 },
                 constraints: table =>
@@ -142,6 +145,12 @@ namespace AuthService.Persistence.Migrations
                 name: "ix_user_password_resets_user_id",
                 table: "user_password_resets",
                 column: "user_id",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_user_profiles_dpi",
+                table: "user_profiles",
+                column: "dpi",
                 unique: true);
 
             migrationBuilder.CreateIndex(
