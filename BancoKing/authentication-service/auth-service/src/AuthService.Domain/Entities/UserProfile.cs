@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AuthService.Domain.Entities;
 
@@ -13,8 +14,19 @@ public class UserProfile
     [MaxLength(16)]
     public string UserId { get; set; } = string.Empty;
 
-    [MaxLength(250)]
-    public string ProfilePicture { get; set; } = string.Empty;
+    [Required]
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal MonthlyIncome { get; set; }
+
+    [MaxLength(50)]
+    public string Address { get; set; } = string.Empty;
+
+    [MaxLength(50)]
+    public string JobName { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(13)]
+    public string DPI { get; set; } = string.Empty;
 
     [Required]
     [StringLength(8, MinimumLength = 8, ErrorMessage = "El número de teléfono debe ser exactamente de 8 caracteres")]

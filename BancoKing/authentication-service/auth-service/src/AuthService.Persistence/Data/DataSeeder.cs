@@ -10,6 +10,7 @@ public static class DataSeeder
 {
     public static async Task SeendAsync(ApplicationDbContext context)
     {
+        // Sembrar Roles si no existen
         if (!context.Roles.Any())
         {
             var roles = new List<Role>
@@ -30,6 +31,8 @@ public static class DataSeeder
             await context.SaveChangesAsync();
         }
 
+        // Usuario de tipo Administrador
+
         if (!await context.Users.AnyAsync())
         {
             var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == RoleConstants.ADMIN_ROLE);
@@ -44,19 +47,22 @@ public static class DataSeeder
                 var adminUser = new User
                 {
                     Id = userId,
-                    Name = "Admin User",
-                    SurName = "Admin Surname",
-                    UserName = "admin",
-                    Email = "ksadmin@local.com",
-                    Password = passwordHasher.HashPassword("tE4m!"),
+                    Name = "Administrador",
+                    SurName = "General",
+                    UserName = "ADMINB",
+                    Email = "admin@banco.com",
+                    Password = passwordHasher.HashPassword("ADMINB"),
                     Status = true,
 
                     UserProfile = new UserProfile
                     {
                         Id = profileId,
                         UserId = userId,
-                        ProfilePicture = "",
+                        DPI = "0000000000000",
+                        Address = "Guatemala",
                         Phone = "00000000",
+                        JobName = "ADMIN",
+                        MonthlyIncome = 1000.00m
 
                     },
 

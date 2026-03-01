@@ -15,7 +15,8 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
         var verificationUrl = $"{configuration["AppSettings:FrontendUrl"]}/verify-email?token={token}";
 
         var body = $@"
-            <h2>¡Bienvenido {username}!</h2>
+            <h2>¡Bienvenido {username} a BancoKing!</h2>
+            <h4>Tu banco de confianza </h4>
             <p>Por favor, verifica tu dirección de correo electrónico haciendo clic en el enlace a continuación:</p>
             <a href='{verificationUrl}' style='background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>
                 Verificar Correo Electrónico

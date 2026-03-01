@@ -116,4 +116,14 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
         await context.SaveChangesAsync();
     }
 
+    public async Task<IEnumerable<User>> GetAllAsync()
+    {
+        return await context.Users
+            .Include(u => u.UserProfile)
+            .Include(u => u.UserEmail)
+            .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+            .ToListAsync();
+    }
+
 }

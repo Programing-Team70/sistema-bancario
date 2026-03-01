@@ -2,6 +2,8 @@ using System;
 using AuthService.Application.DTOs;
 using AuthService.Application.DTOs.Email;
 using AuthService.Application.Interfaces;
+using AuthService.Domain.Constants;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 namespace AuthService.Api.Controllers;
@@ -19,13 +21,15 @@ public class AuthController(IAuthService authService) : ControllerBase
     }
 
     [HttpPost("register")]
-    [RequestSizeLimit(10 * 1024 * 1024)] 
+    [Authorize(Roles = RoleConstants.ADMIN_ROLE)]
+    [RequestSizeLimit(10 * 1024 * 1024)]
     [EnableRateLimiting("AuthPolicy")]
-    public async Task<ActionResult<RegisterResponseDto>> Register([FromForm] RegisterDto registerDto)
+    public async Task<ActionResult<RegisterResponseDto>> Register([FromBody] RegisterDto registerDto)
     {
         var result = await authService.RegisterAsync(registerDto);
         return StatusCode(201, result);
     }
+
     [HttpPost("verify-email")]
     [EnableRateLimiting("AuthPolicy")]
     public async Task<ActionResult<EmailResponseDto>> VerifyEmail([FromBody] VerifyEmailDto verifyEmailDto)
@@ -33,6 +37,4 @@ public class AuthController(IAuthService authService) : ControllerBase
         var result = await authService.VerifyEmailAsync(verifyEmailDto);
         return Ok(result);
     }
-
-
 }

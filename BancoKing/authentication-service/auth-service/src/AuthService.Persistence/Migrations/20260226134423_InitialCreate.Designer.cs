@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AuthService.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260214170329_InitialAdded")]
-    partial class InitialAdded
+    [Migration("20260226134423_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -199,19 +199,33 @@ namespace AuthService.Persistence.Migrations
                         .HasColumnType("character varying(16)")
                         .HasColumnName("id");
 
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("address");
+
+                    b.Property<string>("DPI")
+                        .IsRequired()
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
+                        .HasColumnName("dpi");
+
+                    b.Property<string>("JobName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("job_name");
+
+                    b.Property<decimal>("MonthlyIncome")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("monthly_income");
+
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasMaxLength(8)
                         .HasColumnType("character varying(8)")
                         .HasColumnName("phone");
-
-                    b.Property<string>("ProfilePicture")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(250)
-                        .HasColumnType("character varying(250)")
-                        .HasDefaultValue("")
-                        .HasColumnName("profile_picture");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -221,6 +235,10 @@ namespace AuthService.Persistence.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_user_profiles");
+
+                    b.HasIndex("DPI")
+                        .IsUnique()
+                        .HasDatabaseName("ix_user_profiles_dpi");
 
                     b.HasIndex("UserId")
                         .IsUnique()
