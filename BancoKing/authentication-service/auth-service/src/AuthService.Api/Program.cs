@@ -2,6 +2,7 @@ using AuthService.Api.Extensions;
 using AuthService.Api.Middlewares;
 using AuthService.Api.ModelBinders;
 using AuthService.Persistence.Data;
+using Microsoft.EntityFrameworkCore;
 using NetEscapades.AspNetCore.SecurityHeaders.Infrastructure;
 using Serilog;
 using Microsoft.AspNetCore.Hosting.Server;
@@ -16,10 +17,7 @@ builder.Host.UseSerilog((context, services, loggerConfiguration) =>
         .ReadFrom.Configuration(context.Configuration)
         .ReadFrom.Services(services));
 
-builder.Services.AddControllers(options =>
-{
-    options.ModelBinderProviders.Insert(0, new FileDataModelBinderProvider());
-})
+builder.Services.AddControllers()
 .AddJsonOptions(o =>
 {
     o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
@@ -120,24 +118,29 @@ app.Lifetime.ApplicationStarted.Register(() =>
 
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    var context = services.GetRequiredService<ApplicationDbContext>();
 
     try
     {
-        logger.LogInformation("Verificando conexión a la base de datos...");
+        logger.LogInformation("Aplicando migraciones pendientes en PostgreSQL...");
 
-        await context.Database.EnsureCreatedAsync();
+        // Esto crea la DB si no existe Y aplica todas las migraciones de la carpeta Migrations
+        await context.Database.MigrateAsync();
 
-        logger.LogInformation("Base de datos lista. Ejecutando datos semilla...");
+        logger.LogInformation("Base de datos actualizada. Ejecutando DataSeeder...");
+
+        // Ejecuta la siembra de roles y admin
         await DataSeeder.SeendAsync(context);
 
-        logger.LogInformation("Inicialización de base de datos completada exitosamente");
+        logger.LogInformation("Inicialización del sistema bancario completada exitosamente.");
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Ocurrió un error al inicializar la base de datos");
-        throw; 
+        logger.LogError(ex, "ERROR CRÍTICO: No se pudo inicializar la base de datos.");
+        // En un banco, si la DB no inicia, la app no debería arrancar
+        throw;
     }
 }
 
