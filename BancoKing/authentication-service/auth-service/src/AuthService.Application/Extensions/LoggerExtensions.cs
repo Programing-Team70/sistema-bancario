@@ -35,9 +35,38 @@ public static partial class LoggerExtensions
         Message = "Registration rejected: username already exists")]
     public static partial void LogRegistrationWithExistingUsername(this ILogger logger);
 
+    // Auditoría de creación por Administrador (Crucial para el banco)
     [LoggerMessage(
-        EventId = 1006,
-        Level = LogLevel.Error,
-        Message = "Error uploading profile image")]
-    public static partial void LogImageUploadError(this ILogger logger);
+        EventId = 1007,
+        Level = LogLevel.Information,
+        Message = "Admin created a new client: {Username}")]
+    public static partial void LogClientCreatedByAdmin(this ILogger logger, string username);
+
+    // Rechazo (Ingresos < Q100)
+    [LoggerMessage(
+        EventId = 1008,
+        Level = LogLevel.Warning,
+        Message = "Registration rejected: Income {Income} is below minimum requirement")]
+    public static partial void LogRegistrationRejectedLowIncome(this ILogger logger, decimal income);
+
+    // Intento de modificar datos prohibidos (DPI o Password por Admin)
+    [LoggerMessage(
+        EventId = 1009,
+        Level = LogLevel.Warning,
+        Message = "Restricted field update attempt on user {UserId}")]
+    public static partial void LogRestrictedFieldUpdateAttempt(this ILogger logger, string userId);
+
+    // Gestión de Roles
+    [LoggerMessage(
+        EventId = 1010,
+        Level = LogLevel.Information,
+        Message = "Role updated for user {UserId}. New Role ID: {RoleId}")]
+    public static partial void LogUserRoleUpdated(this ILogger logger, string userId, string roleId);
+
+    // Eliminación de usuarios (Acción crítica)
+    [LoggerMessage(
+        EventId = 1011,
+        Level = LogLevel.Critical,
+        Message = "User {UserId} was DELETED from the system")]
+    public static partial void LogUserDeleted(this ILogger logger, string userId);
 }

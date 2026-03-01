@@ -18,15 +18,13 @@ public class AuthService(
     IRoleRepository roleRepository,
     IPasswordHashService passwordHashService,
     IJwtTokenService jwtTokenService,
-    ICloudinaryService cloudinaryService,
     IEmailService emailService,
     IConfiguration configuration,
     ILogger<AuthService> logger) : IAuthService
 {
-    private readonly ICloudinaryService _cloudinaryService = cloudinaryService;
     public async Task<RegisterResponseDto> RegisterAsync(RegisterDto registerDto)
     {
-
+        // Validaciones de existencia
         if (await userRepository.ExistsByEmailAsync(registerDto.Email))
         {
             logger.LogRegistrationWithExistingEmail();
@@ -39,41 +37,20 @@ public class AuthService(
             throw new BusinessException(ErrorCodes.USERNAME_ALREADY_EXISTS, "Username already exists");
         }
 
-        string profilePicturePath;
-
-        if (registerDto.ProfilePicture != null && registerDto.ProfilePicture.Size > 0)
+        // Validación de Ingresos Mínimos
+        if (registerDto.MonthlyIncome < 100)
         {
-            var (isValid, errorMessage) = FileValidator.ValidateImage(registerDto.ProfilePicture);
-            if (!isValid)
-            {
-                logger.LogWarning($"File validation failed: {errorMessage}");
-                throw new BusinessException(ErrorCodes.INVALID_FILE_FORMAT, errorMessage!);
-            }
-
-            try
-            {
-                var fileName = FileValidator.GenerateSecureFileName(registerDto.ProfilePicture.FileName);
-                profilePicturePath = await _cloudinaryService.UploadImageAsync(registerDto.ProfilePicture, fileName);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "ERROR DETALLADO DE CLOUDINARY: {Message}", ex.Message);
-                throw new BusinessException(ErrorCodes.IMAGE_UPLOAD_FAILED, $"Cloudinary Error: {ex.Message}");
-            }
-        }
-        else
-        {
-            profilePicturePath = _cloudinaryService.GetDefaultAvatarUrl();
+            logger.LogRegistrationRejectedLowIncome(registerDto.MonthlyIncome);
+            throw new BusinessException(ErrorCodes.INSUFFICIENT_MONTHLY_INCOME, "Los ingresos mensuales deben ser mayores a Q100.00");
         }
 
         var emailVerificationToken = TokenGenerator.GenerateEmailVerificationToken();
-
         var userId = UuidGenerator.GenerateUserId();
         var userProfileId = UuidGenerator.GenerateUserId();
         var userEmailId = UuidGenerator.GenerateUserId();
         var userRoleId = UuidGenerator.GenerateUserId();
-
         var defaultRole = await roleRepository.GetByNameAsync(RoleConstants.USER_ROLE);
+
         if (defaultRole == null)
         {
             throw new InvalidOperationException($"Default role '{RoleConstants.USER_ROLE}' not found. Ensure seeding runs before registration.");
@@ -92,8 +69,11 @@ public class AuthService(
             {
                 Id = userProfileId,
                 UserId = userId,
-                ProfilePicture = profilePicturePath,
-                Phone = registerDto.Phone
+                Phone = registerDto.Phone,
+                DPI = registerDto.DPI,
+                Address = registerDto.Address,
+                JobName = registerDto.JobName,
+                MonthlyIncome = registerDto.MonthlyIncome
             },
             UserEmail = new UserEmail
             {
@@ -115,7 +95,6 @@ public class AuthService(
         };
 
         var createdUser = await userRepository.CreateUserAsync(user);
-
         logger.LogUserRegistered(createdUser.UserName);
 
         _ = Task.Run(async () =>
@@ -143,34 +122,40 @@ public class AuthService(
     public async Task<AuthResponseDto> LoginAsync(LoginDto loginDto)
     {
         User? user = null;
+        string identity = loginDto.EmailOrUsername;
 
-        if (loginDto.EmailOrUsername.Contains('@'))
+        // Busqueda de usuario (Email o Username)
+        if (identity.Contains('@'))
         {
-            user = await userRepository.GetByEmailAsync(loginDto.EmailOrUsername.ToLowerInvariant());
+            user = await userRepository.GetByEmailAsync(identity.ToLowerInvariant());
         }
         else
         {
-            user = await userRepository.GetByUsernameAsync(loginDto.EmailOrUsername);
+            user = await userRepository.GetByUsernameAsync(identity);
         }
 
+        // Validación: ¿Existe el usuario?
         if (user == null)
         {
             logger.LogFailedLoginAttempt();
             throw new UnauthorizedAccessException("Invalid credentials");
         }
 
+        // Validación: ¿Está la cuenta?
         if (!user.Status)
         {
             logger.LogFailedLoginAttempt();
             throw new UnauthorizedAccessException("User account is disabled");
         }
 
+        // Validación: Contraseña
         if (!passwordHashService.VerifyPassword(loginDto.Password, user.Password))
         {
             logger.LogFailedLoginAttempt();
             throw new UnauthorizedAccessException("Invalid credentials");
         }
 
+        // Exito: Registro en Log y Generación de token
         logger.LogUserLoggedIn();
 
         var token = jwtTokenService.GenerateToken(user);
@@ -196,10 +181,17 @@ public class AuthService(
             Surname = user.SurName,
             Username = user.UserName,
             Email = user.Email,
-            ProfilePicture = _cloudinaryService.GetFullImageUrl(user.UserProfile?.ProfilePicture ?? string.Empty),
-            Phone = user.UserProfile?.Phone ?? string.Empty,
-            Role = userRole,
             Status = user.Status,
+            Role = userRole,
+
+            //Datos de Perfil
+            Phone = user.UserProfile?.Phone ?? string.Empty,
+            DPI = user.UserProfile?.DPI ?? string.Empty,
+            Address = user.UserProfile?.Address ?? string.Empty,
+            JobName = user.UserProfile?.JobName ?? string.Empty,
+            MonthlyIncome = user.UserProfile?.MonthlyIncome ?? 0m,
+
+            // Nice
             IsEmailVerified = user.UserEmail?.EmailVerified ?? false,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
@@ -212,7 +204,7 @@ public class AuthService(
         {
             Id = user.Id,
             Username = user.UserName,
-            ProfilePicture = _cloudinaryService.GetFullImageUrl(user.UserProfile?.ProfilePicture ?? string.Empty),
+            FullName = $"{user.Name} {user.SurName}",
             Role = user.UserRoles.FirstOrDefault()?.Role?.Name ?? RoleConstants.USER_ROLE
         };
     }
