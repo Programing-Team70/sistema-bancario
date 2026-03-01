@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using AuthService.Api.Models;
 using AuthService.Application.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace AuthService.Api.Middlewares;
 
@@ -11,6 +12,7 @@ public class GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExcep
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
+
     public async Task InvokeAsync(HttpContext context)
     {
         try
@@ -42,6 +44,12 @@ public class GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExcep
                 StatusCode = (int)HttpStatusCode.Unauthorized,
                 Title = "Unauthorized",
                 Detail = "Credenciales inválidas o permisos insuficientes"
+            },
+            DbUpdateException => new ErrorResponse
+            {
+                StatusCode = (int)HttpStatusCode.Conflict,
+                Title = "Database Conflict",
+                Detail = "El registro ya existe (DPI o Email duplicado)."
             },
             ArgumentException argEx => new ErrorResponse
             {
