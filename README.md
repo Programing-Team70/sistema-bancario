@@ -97,7 +97,7 @@ Base URL: `http://localhost:3001/api`
 
 | Método | Ruta | Descripción | Auth | Rol |
 |--------|------|-------------|------|-----|
-| `GET` | `/withdrawal` | Retiros | Si | Admin |
+| `POST` | `/withdrawal` | Retiros | Si | Admin |
 
 
 
