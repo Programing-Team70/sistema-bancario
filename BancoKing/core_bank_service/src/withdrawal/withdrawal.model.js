@@ -1,22 +1,23 @@
-import { DataTypes } from 'sequelize';
-import { sequelize } from '../../configs/db.js';
+import { DataTypes } from "sequelize";
+import { sequelize } from "../../configs/db.js";
 
-export const Withdrawal = sequelize.define('withdrawal', {
-    id: { 
-        type: DataTypes.UUID, 
-        defaultValue: DataTypes.UUIDV4, 
-        primaryKey: true 
+export const Withdrawal = sequelize.define(
+  "withdrawal",
+  {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
     },
-    accountNumber: { 
-        type: DataTypes.STRING(10), 
-        allowNull: false, 
-        field: 'account_number' },
-    amount: { 
-        type: DataTypes.DECIMAL(10, 2), 
-        allowNull: false 
+    accountNumber: {
+      type: DataTypes.STRING(15),
+      allowNull: false,
+      field: "account_number",
     },
-    description: { 
-        type: DataTypes.STRING, 
-        defaultValue: 'Retiro en efectivo' 
-    }
-}, { timestamps: true });
+    amount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
+  },
+  { timestamps: true },
+);
