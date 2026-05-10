@@ -155,7 +155,7 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
             if (useFallback)
             {
                 logger.LogWarning("Usando respaldo de email");
-                return; 
+                return;
             }
 
             throw new InvalidOperationException($"Error al enviar el email: {ex.Message}", ex);
