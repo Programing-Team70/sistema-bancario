@@ -20,3 +20,12 @@ export const verifyEmail = async (token) => {
 export const updateUser = async (id, data) => {
   return await axiosAuth.put(`/user/${id}`, data);
 };
+
+export const getMyProfile = async () => {
+  const { data } = await axiosAuth.get('/User/me');
+  return { perfil: data };
+};
+
+export const assignRole = async (data) => {
+  return await axiosAuth.post('/user/assign-role', data);
+};

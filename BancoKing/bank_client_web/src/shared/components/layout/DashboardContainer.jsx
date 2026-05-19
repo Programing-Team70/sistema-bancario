@@ -1,4 +1,5 @@
 import { Sidebar } from './Sidebar.jsx';
+import { Navbar } from './Navbar.jsx';
 import '../../../styles/App.css';
 
 export const DashboardContainer = ({ children }) => {
@@ -6,7 +7,11 @@ export const DashboardContainer = ({ children }) => {
     <div className='dashboard-layout'>
       <Sidebar />
 
-      <main className='dashboard-content'>{children}</main>
+      <div className='dashboard-main'>
+        <Navbar />
+
+        <main className='dashboard-content'>{children}</main>
+      </div>
     </div>
   );
 };
