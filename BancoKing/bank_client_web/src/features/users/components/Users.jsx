@@ -4,21 +4,21 @@ import { Spinner } from '../../auth/components/Spinner.jsx';
 import { showError } from '../../../shared/utils/toast.js';
 import { AddUserForm } from './AddUserForm.jsx';
 import { UpdateUserForm } from './UpdateUserForm.jsx';
-import { UserPlus, Eye } from 'lucide-react';
+import { AssignRoleModal } from './AssingRoleModal.jsx';
+import { UserPlus, Eye, ShieldCheck } from 'lucide-react';
 import '../../../styles/App.css';
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 7;
 
 export const Users = () => {
-  const { users, loading, error, getAllUsers } = useUserManagementStore();
-
+  const { users = [], loading, error, getAllUsers } = useUserManagementStore();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [page, setPage] = useState(1);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
 
   useEffect(() => {
     getAllUsers();
@@ -32,7 +32,11 @@ export const Users = () => {
 
   const filteredUsers = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
+
     return users.filter((u) => {
+      if (!u) return false;
+
+      const userId = String(u.id || u._id || '').toLowerCase();
       const fullName = `${u.name || u.Name || ''} ${u.surname || u.Surname || ''}`
         .trim()
         .toLowerCase();
@@ -42,8 +46,10 @@ export const Users = () => {
       const matchesSearch =
         !normalizedSearch ||
         fullName.includes(normalizedSearch) ||
-        email.includes(normalizedSearch);
+        email.includes(normalizedSearch) ||
+        userId.includes(normalizedSearch);
       const matchesRole = roleFilter === 'ALL' ? true : role === roleFilter.toUpperCase();
+
       return matchesSearch && matchesRole;
     });
   }, [users, search, roleFilter]);
@@ -62,7 +68,11 @@ export const Users = () => {
     <div className='users-page'>
       <div
         className='users-header'
-        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
       >
         <div>
           <h1>Usuarios</h1>
@@ -72,7 +82,12 @@ export const Users = () => {
         <button
           className='btn-primary'
           onClick={() => setIsModalOpen(true)}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px' }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 20px',
+          }}
         >
           <UserPlus size={20} />
           Nuevo Usuario
@@ -87,7 +102,7 @@ export const Users = () => {
               setSearch(e.target.value);
               setPage(1);
             }}
-            placeholder='Buscar por nombre o email...'
+            placeholder='Buscar por nombre, email o id...'
             className='users-input'
           />
 
@@ -122,47 +137,72 @@ export const Users = () => {
                 <th>Acciones</th>
               </tr>
             </thead>
+
             <tbody>
               {paginatedUsers.length === 0 ? (
                 <tr>
-                  <td className='empty-state' colSpan={8}>
+                  <td className='empty-state' colSpan={9}>
+                    {' '}
+                    {/* Corregido colSpan a 9 ya que tienes 9 columnas */}
                     No se encontraron usuarios con esos criterios.
                   </td>
                 </tr>
               ) : (
-                paginatedUsers.map((u) => (
-                  <tr key={u.id || u._id}>
-                    <td className='user-name'>{u.name || u.Name || '-'}</td>
-                    <td>{u.surname || u.Surname || '-'}</td>
-                    <td>{u.email || u.Email || '-'}</td>
-                    <td>{u.phone || u.Phone || '-'}</td>
-                    <td>{u.dpi || u.Dpi || '-'}</td>
-                    <td>
-                      {u.monthlyIncome || u.MonthlyIncome
-                        ? `Q ${Number(u.monthlyIncome || u.MonthlyIncome).toLocaleString()}`
-                        : '-'}
-                    </td>
-                    <td>{u.jobName || u.JobName || '-'}</td>
-                    <td>
-                      <span
-                        className={`role-badge ${(u.role || u.Role) === 'ADMIN_ROLE' ? 'role-admin' : 'role-user'}`}
-                      >
-                        {u.role || u.Role}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        className='table-action-btn'
-                        onClick={() => {
-                          setSelectedUser(u);
-                          setIsUpdateModalOpen(true);
+                paginatedUsers.map((u) => {
+                  const currentRole = u.role || u.Role || 'USER_ROLE'; // Fallback seguro para el rol
+                  const userId = u.id || u._id;
+
+                  return (
+                    <tr key={userId}>
+                      <td className='user-name'>{u.name || u.Name || '-'}</td>
+                      <td>{u.surname || u.Surname || '-'}</td>
+                      <td>{u.email || u.Email || '-'}</td>
+                      <td>{u.phone || u.Phone || '-'}</td>
+                      <td>{u.dpi || u.Dpi || '-'}</td>
+                      <td>
+                        {u.monthlyIncome || u.MonthlyIncome
+                          ? `Q ${Number(u.monthlyIncome || u.MonthlyIncome).toLocaleString()}`
+                          : '-'}
+                      </td>
+                      <td>{u.jobName || u.JobName || '-'}</td>
+                      <td>
+                        <span
+                          className={`role-badge ${
+                            currentRole === 'ADMIN_ROLE' ? 'role-admin' : 'role-user'
+                          }`}
+                        >
+                          {currentRole}
+                        </span>
+                      </td>
+                      <td
+                        style={{
+                          display: 'flex',
+                          gap: '10px',
                         }}
                       >
-                        <Eye size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                        <button
+                          className='table-action-btn'
+                          onClick={() => {
+                            setSelectedUser(u);
+                            setIsUpdateModalOpen(true);
+                          }}
+                        >
+                          <Eye size={18} />
+                        </button>
+
+                        <button
+                          className='table-action-btn'
+                          onClick={() => {
+                            setSelectedUser(u);
+                            setIsRoleModalOpen(true);
+                          }}
+                        >
+                          <ShieldCheck size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -173,13 +213,16 @@ export const Users = () => {
             Mostrando {(currentPage - 1) * PAGE_SIZE + (paginatedUsers.length ? 1 : 0)} -{' '}
             {(currentPage - 1) * PAGE_SIZE + paginatedUsers.length} de {filteredUsers.length}
           </p>
+
           <div className='pagination-buttons'>
             <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
               Anterior
             </button>
+
             <span>
               {currentPage} / {totalPages}
             </span>
+
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
@@ -191,11 +234,20 @@ export const Users = () => {
       </div>
 
       <AddUserForm isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+
       <UpdateUserForm
         isOpen={isUpdateModalOpen}
         onClose={() => setIsUpdateModalOpen(false)}
         user={selectedUser}
       />
+
+      {isRoleModalOpen && (
+        <AssignRoleModal
+          isOpen={isRoleModalOpen}
+          onClose={() => setIsRoleModalOpen(false)}
+          user={selectedUser}
+        />
+      )}
     </div>
   );
 };

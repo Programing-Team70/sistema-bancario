@@ -3,17 +3,20 @@ import {
   getAllUsers as getAllUsersRequest,
   register as createUserRequest,
   updateUser as updateUserRequest,
+  getMyProfile as getMyProfileRequest,
+  assignRole as postAssingRoleRequest,
 } from '../../../shared/api';
 
 export const useUserManagementStore = create((set, get) => ({
   users: [],
+  profile: null,
   loading: false,
   error: null,
   filters: {},
 
   setFilters: (filters) => set({ filters }),
-
   setUsers: (users) => set({ users }),
+  clearError: () => set({ error: null }),
 
   getAllUsers: async (apiFn = getAllUsersRequest, options = {}) => {
     try {
@@ -62,7 +65,6 @@ export const useUserManagementStore = create((set, get) => ({
       const errorMessage = err.response?.data?.message || 'Error al registrar el usuario';
 
       set({
-        error: errorMessage,
         loading: false,
       });
 
@@ -78,9 +80,10 @@ export const useUserManagementStore = create((set, get) => ({
 
     try {
       const response = await updateUserRequest(id, userData);
-
       const currentUsers = get().users;
-      const updatedUsers = currentUsers.map((u) => (u.id === id ? { ...u, ...userData } : u));
+      const updatedUsers = currentUsers.map((u) =>
+        u._id === id || u.id === id ? { ...u, ...userData } : u
+      );
 
       set({
         users: updatedUsers,
@@ -96,7 +99,58 @@ export const useUserManagementStore = create((set, get) => ({
       const errorMessage = err.response?.data?.message || 'Error al actualizar el usuario';
 
       set({
+        loading: false,
+      });
+
+      return {
+        success: false,
         error: errorMessage,
+      };
+    }
+  },
+
+  myProfile: async () => {
+    set({ loading: true, error: null });
+
+    try {
+      const response = await getMyProfileRequest();
+      const profileData = response.perfil || response.data?.perfil || response.data || response;
+
+      set({
+        profile: profileData,
+        loading: false,
+        error: null,
+      });
+
+      return {
+        success: true,
+        data: profileData,
+      };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Error al obtener el perfil';
+      set({
+        error: errorMessage,
+        loading: false,
+      });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  assingRole: async (roleData) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await postAssingRoleRequest(roleData);
+      set({ loading: false });
+      await get().getAllUsers(undefined, { force: true });
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Error al asignar el rol';
+
+      set({
         loading: false,
       });
 

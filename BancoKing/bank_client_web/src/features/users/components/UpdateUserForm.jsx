@@ -1,8 +1,6 @@
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-
 import { User, Phone, MapPin, Briefcase, CreditCard, X, Pencil } from 'lucide-react';
-
 import toast from 'react-hot-toast';
 import { useUserManagementStore } from '../store/useUserManagementStore.js';
 
