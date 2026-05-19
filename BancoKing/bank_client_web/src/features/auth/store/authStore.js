@@ -13,11 +13,15 @@ export const useAuthStore = create(
     isLoadingAuth: true,
     isAuthenticated: false,
 
+    setUser: (updatedUser) => {
+      set({ user: updatedUser });
+    },
+
     checkAuth: () => {
-      const token = get().token;
-      const role = get().user?.role;
-      const isAdmin = role === 'ADMIN_ROLE';
-      if (token && !isAdmin) {
+      const { token, user } = get();
+      const role = user?.role;
+      const isValidRole = role === 'ADMIN_ROLE' || role === 'USER_ROLE';
+      if (token && !isValidRole) {
         set({
           user: null,
           token: null,
@@ -30,7 +34,7 @@ export const useAuthStore = create(
       }
       set({
         isLoadingAuth: false,
-        isAuthenticated: Boolean(token) && isAdmin,
+        isAuthenticated: Boolean(token) && isValidRole,
       });
     },
 
@@ -45,7 +49,6 @@ export const useAuthStore = create(
         loading: false,
         error: null,
       });
-      window.location.href = '/';
     },
 
     login: async ({ emailOrUsername, password }) => {
@@ -54,8 +57,8 @@ export const useAuthStore = create(
         const { data } = await loginRequest({ emailOrUsername, password });
         const role = data?.userDetails?.role;
 
-        if (role !== 'ADMIN_ROLE') {
-          const permissionMessage = 'No tienes permisos para acceder a esta aplicación';
+        if (role !== 'ADMIN_ROLE' && role !== 'USER_ROLE') {
+          const permissionMessage = 'No tienes permisos para acceder';
           set({
             user: null,
             token: null,
