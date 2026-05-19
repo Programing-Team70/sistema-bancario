@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Wallet,
@@ -15,20 +15,57 @@ import { useAuthStore } from '../../../features/auth/store/authStore';
 
 export const Sidebar = () => {
   const location = useLocation();
-  const { logout } = useAuthStore();
+  const navigate = useNavigate();
+
+  const { logout, user } = useAuthStore();
 
   const navItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', to: '/dashboard' },
-    { icon: User, label: 'Usuarios', to: '/dashboard/users' },
-    { icon: Wallet, label: 'Cuentas', to: '/dashboard/movements' },
-    { icon: History, label: 'Movimientos', to: '/dashboard/accounts' },
-    { icon: ArrowLeftRight, label: 'Transferencias', to: '/dashboard/transfers' },
-    { icon: PiggyBank, label: 'Ahorros', to: '/dashboard/savings' },
+    {
+      icon: LayoutDashboard,
+      label: 'Dashboard',
+      to: '/dashboard',
+      roles: ['ADMIN_ROLE', 'USER_ROLE'],
+    },
+    {
+      icon: User,
+      label: 'Usuarios',
+      to: '/dashboard/users',
+      roles: ['ADMIN_ROLE'],
+    },
+    {
+      icon: Wallet,
+      label: 'Cuentas',
+      to: '/dashboard/accounts',
+      roles: ['ADMIN_ROLE', 'USER_ROLE'],
+    },
+    {
+      icon: History,
+      label: 'Movimientos',
+      to: '/dashboard/movements',
+      roles: ['ADMIN_ROLE'],
+    },
+    {
+      icon: ArrowLeftRight,
+      label: 'Transferencias',
+      to: '/dashboard/transfers',
+      roles: ['ADMIN_ROLE', 'USER_ROLE'],
+    },
+    {
+      icon: PiggyBank,
+      label: 'Ahorros',
+      to: '/dashboard/savings',
+      roles: ['ADMIN_ROLE', 'USER_ROLE'],
+    },
   ];
+
+  const filteredNavItems = navItems.filter((item) => item.roles.includes(user?.role));
 
   const handleLogout = () => {
     toast.success('Sesión cerrada con éxito');
+
     logout();
+
+    navigate('/');
   };
 
   return (
@@ -37,7 +74,14 @@ export const Sidebar = () => {
         <div className='logo-icon'>
           <Wallet size={20} />
         </div>
-        <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-main)' }}>
+
+        <span
+          style={{
+            fontSize: '18px',
+            fontWeight: '700',
+            color: 'var(--text-main)',
+          }}
+        >
           Banco King
         </span>
       </div>
@@ -45,7 +89,7 @@ export const Sidebar = () => {
       <nav className='sidebar-nav'>
         <p className='nav-label'>Menú Principal</p>
 
-        {navItems.map((item) => {
+        {filteredNavItems.map((item) => {
           const isActive = location.pathname === item.to;
 
           return (
