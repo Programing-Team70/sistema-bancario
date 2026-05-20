@@ -45,15 +45,15 @@ export const Sidebar = () => {
       roles: ['ADMIN_ROLE'],
     },
     {
+      icon: PiggyBank,
+      label: 'Depósitos',
+      to: '/dashboard/deposits',
+      roles: ['ADMIN_ROLE'],
+    },
+    {
       icon: ArrowLeftRight,
       label: 'Transferencias',
       to: '/dashboard/transfers',
-      roles: ['ADMIN_ROLE', 'USER_ROLE'],
-    },
-    {
-      icon: PiggyBank,
-      label: 'Ahorros',
-      to: '/dashboard/savings',
       roles: ['ADMIN_ROLE', 'USER_ROLE'],
     },
   ];

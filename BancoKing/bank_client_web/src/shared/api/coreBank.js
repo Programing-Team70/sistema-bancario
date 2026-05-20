@@ -52,3 +52,22 @@ export const createWithdrawal = async (data) => {
   const response = await axiosCoreBank.post('/withdrawals/', data);
   return response.data;
 };
+
+export const getMyAccounts = async (order = 'DESC') => {
+  const response = await axiosCoreBank.get('/accounts/my-accounts', {
+    params: { order },
+  });
+  return response.data;
+};
+
+export const getAccountStatement = async (id, currency = 'GTQ') => {
+  const response = await axiosCoreBank.get(`/accounts/statement/${id}`, {
+    params: { currency },
+  });
+  return response.data;
+};
+
+export const createDeposit = async (data) => {
+  const response = await axiosCoreBank.post('/deposit/', data);
+  return response.data;
+};
