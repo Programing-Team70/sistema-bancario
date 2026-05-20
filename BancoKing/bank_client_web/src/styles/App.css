@@ -1101,7 +1101,6 @@ button.navbar-profile.active {
 
 .profile-body {
   padding: 35px;
-
   overflow-y: auto;
   flex: 1;
 }
@@ -1265,7 +1264,6 @@ ul {
 }
 
 @media (max-width: 768px) {
-  /* Login & Modales Anchos */
   .grid-2 {
     grid-template-columns: 1fr;
   }
@@ -1274,7 +1272,6 @@ ul {
     max-width: 100%;
   }
 
-  /* Dashboard Contenido */
   .dashboard-content {
     padding: 16px;
   }
@@ -1906,8 +1903,6 @@ ul {
   color: #111827;
   word-break: break-all;
 }
-
-/* ACTIONS */
 
 .disable-account-actions {
   display: flex;
@@ -2841,4 +2836,119 @@ ul {
   .btn-withdraw {
     min-width: 100%;
   }
+}
+
+.movements-header-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.return-button-layout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+}
+
+.account-summary-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background-color: var(--card-background, #ffffff);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 16px;
+  border-left: 4px solid #1a73e8;
+}
+
+.summary-label {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #666666;
+}
+
+.summary-value {
+  margin: 4px 0 0 0;
+  font-weight: bold;
+}
+
+.account-type-badge {
+  margin-left: 8px;
+  font-size: 0.75rem;
+}
+
+.account-summary-balance {
+  text-align: right;
+}
+
+.balance-value {
+  margin: 4px 0 0 0;
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+.currency-dropdown {
+  margin-left: 8px;
+  width: 120px;
+}
+
+.refresh-button-layout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.amount-positive {
+  font-weight: bold;
+  color: #2e7d32;
+}
+
+.amount-negative {
+  font-weight: bold;
+  color: #d32f2f;
+}
+
+.my-accounts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.my-accounts-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.refresh-accounts-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+}
+
+.half-columns-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.action-view-btn {
+  background: none;
+  border: none;
+  color: #1a73e8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.action-view-btn:hover {
+  background-color: #f1f3f4;
 }
