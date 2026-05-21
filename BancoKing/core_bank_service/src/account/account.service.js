@@ -309,3 +309,32 @@ export const getAccountSummary = async (accountId, authenticatedUserId) => {
     throw error;
   }
 };
+
+export const getAllAccounts = async ({ order = "DESC" }) => {
+  try {
+    const accounts = await Account.findAll({
+      order: [["createdAt", order.toUpperCase()]],
+    });
+
+    return accounts;
+  } catch (error) {
+    console.error("Error en getAllAccounts Service:", error.message);
+    throw new Error(`Error al obtener todas las cuentas: ${error.message}`);
+  }
+};
+
+export const getAccountsByUserId = async (userId, { order = "DESC" }) => {
+  try {
+    const accounts = await Account.findAll({
+      where: { userId: userId },
+      order: [["createdAt", order.toUpperCase()]],
+    });
+
+    return accounts;
+  } catch (error) {
+    console.error("Error en getAccountsByUserId Service:", error.message);
+    throw new Error(
+      `Error al obtener las cuentas del usuario: ${error.message}`,
+    );
+  }
+};

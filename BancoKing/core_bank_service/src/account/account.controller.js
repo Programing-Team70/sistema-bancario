@@ -174,3 +174,51 @@ export const getAccountSummary = async (req, res) => {
     });
   }
 };
+
+export const getAllAccounts = async (req, res) => {
+  try {
+    const { order } = req.query;
+
+    const accounts = await AccountService.getAllAccounts({
+      order: order || "DESC",
+    });
+
+    return res.status(200).json({
+      success: true,
+      total: accounts.length,
+      accounts,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error interno al obtener las cuentas",
+      error: error.message,
+    });
+  }
+};
+
+export const getAllMyAccounts = async (req, res) => {
+  try {
+    const { order } = req.query;
+    const authenticatedUser = req.user;
+
+    const accounts = await AccountService.getAccountsByUserId(
+      authenticatedUser.uid,
+      {
+        order: order || "DESC",
+      },
+    );
+
+    return res.status(200).json({
+      success: true,
+      total: accounts.length,
+      accounts,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error interno al obtener tus cuentas bancarias",
+      error: error.message,
+    });
+  }
+};
