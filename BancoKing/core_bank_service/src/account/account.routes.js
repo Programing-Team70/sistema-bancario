@@ -7,6 +7,8 @@ import {
   getAdminStatement,
   getGeneralMovements,
   getAccountSummary,
+  getAllAccounts,
+  getAllMyAccounts,
 } from "./account.controller.js";
 import { validateJWT, isAdmin } from "../../middlewares/validate-JWT.js";
 import {
@@ -244,5 +246,60 @@ router.get("/admin/statement/:id", [validateJWT, isAdmin], getAdminStatement);
  *         description: Error interno del servidor.
  */
 router.get("/summary/:id", [validateJWT], getAccountSummary);
+
+/**
+ * @swagger
+ * /api/accounts/admin/all:
+ *   get:
+ *     summary: Obtener el listado de todas las cuentas bancarias (Solo Admin)
+ *     description: Retorna una lista completa de todas las cuentas registradas en el sistema. Requiere permisos de administrador.
+ *     tags: [Account Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: DESC
+ *         description: Ordenar las cuentas por fecha de creación de forma ascendente o descendente.
+ *     responses:
+ *       200:
+ *         description: Lista de cuentas obtenida exitosamente.
+ *       401:
+ *         description: No autorizado - Token faltante o inválido.
+ *       403:
+ *         description: Prohibido - Se requiere rol de ADMINISTRADOR.
+ *       500:
+ *         description: Error interno del servidor.
+ */
+router.get("/admin/all", [validateJWT, isAdmin], getAllAccounts);
+
+/**
+ * @swagger
+ * /api/accounts/my-accounts:
+ *   get:
+ *     summary: Obtener todas las cuentas del usuario logueado
+ *     description: Retorna únicamente la lista de cuentas que pertenecen al token enviado.
+ *     tags: [Account Queries]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: DESC
+ *     responses:
+ *       200:
+ *         description: Lista de tus cuentas obtenida exitosamente.
+ *       401:
+ *         description: Token no válido o no proporcionado.
+ *       500:
+ *         description: Error interno del servidor.
+ */
+router.get("/my-accounts", [validateJWT], getAllMyAccounts);
 
 export default router;
