@@ -21,7 +21,7 @@ Este repositorio contiene el microservicio central de Banco King, encargado de l
 - **Depósitos:** Sistema de depósitos implementado con arquitectura Node.js para un mejor manejo (realizar, modificar y revertir).
 - **Transferencias:** Sistema para transferencias de dinero entre usuarios.
 - **Visualización de cuenta:** Consulta de cuentas con sistema de divisas para visualizar conversiones de moneda.
-- **Gestión de cuentas:** Implementación de historial de movimientos, reportes y retiros.
+- **Gestión de cuentas:** Implementación de historial de movimientos y retiros.
 
 
 ## Tecnologías Utilizadas
@@ -31,6 +31,7 @@ Este repositorio contiene el microservicio central de Banco King, encargado de l
 - Seguridad	JSON Web Tokens (JWT) & Bcrypt
 - PostgreSQL
 - Documentación	Postman
+- React (Vite)
 
 ## Endpoints API (Authentication-Services)
 
@@ -40,17 +41,21 @@ Base URL: `http://localhost:5288/api/v1`
 
 | Método | Ruta | Descripción | Auth | Rol |
 |--------|------|-------------|------|-----|
-| `POST` | `/auth/register` | Registrar nuevo usuario | Si | Admin |
-| `POST` | `/auth/login` | Iniciar sesión | No | Público |
-| `POST` | `/auth/verify-email` | Verificar correo electrónico | No | Público |
+| `POST` | `/auth/login` | Permite registrar cualquier usuario | No | Público |
+| `POST` | `/auth/register` | Restringido solo para Admin | Si | Admin |
+| `POST` | `/auth/verify-email` | Verifica correo electrónico a cualquier usuario vía Token | No | Público |
+
 
 ### Gestionar (`/user`)
 | Método | Ruta | Descripción | Auth | Rol |
 |--------|------|-------------|------|-----|
-| `GET` | `/user/me` | Obtener Perfil | Si | Usuario |
-| `PUT` | `/user/{id}` | Modificar Datos | Si | Usuario/Admin |
-| `POST` | `/user/assign-role` | Cambiar rol del usuario | Si | Admin |
-| `GET` | `/user` | Obtener Usuario | Si | Admin |
+| `GET` | `/user` | Devuelve listado completo de usuarios registrados en el sistema | Si | Admin |
+| `GET` | `/user/{id}` | Recupera Información de Usuarios con ID específico Datos | Si | Admin |
+| `PUT` | `/user/{id}` | Modificar datos de usuario | Si | User/Admin |
+| `POST` | `/user/assign-role` | Asigna roles para gestiones dentro del banco | Si | Admin |
+| `GET` | `/user/me` | Muestra información detallada del usuario logueado actualmente | Si | User |
+
+ **Nota**: En este apartado detalla las funcionalidades disponibles para administrar las cuentas de usuario dentro del sistema.
 
 ---
 
@@ -62,46 +67,56 @@ Base URL: `http://localhost:3001/api`
 
 | Método | Ruta | Descripción | Auth | Rol |
 |--------|------|-------------|------|-----|
-| `POST` | `/accounts/create` | Agregar una nueva cuenta de banco | Si | Admin |
+| `POST` | `/accounts` | Crea nueva cuenta bancaria vinculada a usuario existente | Si | Admin |
+
+### Administrador de Cuentas "ADMIN" (`/accounts`)
+
+| Método | Ruta | Descripción | Auth | Rol |
+|--------|------|-------------|------|-----|
+| `PATCH` | `/accounts/disable ` | Deshabilita el acceso y la operatividad de una cuenta bancaria de forma temporal | Si | Admin |
+| `PATCH` | `/accounts/enable` | Reactiva las funciones de una cuenta previamente suspendida para permitir nuevas transacciones | Si | Admin |
+| `GET` | `/accounts/admin/allmovements` | Genera un reporte global que permite visualizar todos los movimientos realizados en el sistema | Si | Admin |
+| `GET` | `/accounts/admin/statement/{id}` | Permite consultar el historial detallado de transacciones de una cuenta específica mediante su ID | Si | Admin |
+| `GET` | `/accounts/admin/all` | Permite obtener el listado de todas las cuentas bancarias | Si | Admin |
+
+ **Nota**: Este apartado muestra las herramientas de supervisión y control preventivo.
+
+### Consultas de estado de Cuentas "Clientes" (`/accounts`)
+
+| Método | Ruta | Descripción | Auth | Rol |
+|--------|------|-------------|------|-----|
+| `GET` | `/accounts/statement/{id}` | Permite al usuario de la cuenta ver su historial detallado de todos sus movimientos bancarios   | Si | Usuario |
+| `GET` | `/accounts/summary/{id}` | Genera una vista rápida del estado actual y saldo disponible para el usuario de la cuenta | Si | Usuario |
+| `GET` | `/accounts/summary/my-accounts` | Permite al usuario vizualizar todas las cuentas de banco que tenga | Si | Usuario |
+
+> **Nota**: En este módulo los clientes pueden interactuar de manera ágil con su información financiera.
 
 ### Depositos (`/deposit`)
 
 | Método | Ruta | Descripción | Auth | Rol |
 |--------|------|-------------|------|-----|
-| `POST` | `/deposit` | Depositar dinero en la cuenta | Si | Admin |
-| `PUT` | `/deposit/{id de deposito}` | Corregir el deposito | Si | Admin |
-| `DEL` | `/deposit/{id de deposito}` | Revierte el deposito | Si | Admin |
+| `POST` | `/deposit` | Registra el ingreso de capital a una cuenta bancaria específica | Si | Admin |
+| `PUT` | `/deposit/{id}` | Permite corregir datos de un deposito previo | Si | Admin |
 
-### Transferencia (`/transfer`)
-
-| Método | Ruta | Descripción | Auth | Rol |
-|--------|------|-------------|------|-----|
-| `POST` | `/transfer` | Transferencia entre usuarios | Si | Admin/Usuario |
-
-### Divisas (`/accounts`)
+### Transferencia (`/transfers`)
 
 | Método | Ruta | Descripción | Auth | Rol |
 |--------|------|-------------|------|-----|
-| `GET` | `/accounts/{no.Cuenta}` | Observar la cuenta | Si | Admin/Usuario |
+| `POST` | `/transfers` | Registra y ejecuta el envío de fondos entre cuentas internas del banco | Si | Admin/Usuario |
 
-### Observar Movimientos (`/accounts`)
-
-| Método | Ruta | Descripción | Auth | Rol |
-|--------|------|-------------|------|-----|
-| `GET` | `/accounts/history/{no.Cuenta}` | Observar movimiento de la cuenta | Si | Admin/Usuario |
-| `GET` | `/accounts/admin/top-movements?order=DESC` | Reporte de Cuentas | Si | Admin |
-
-> **Nota**: El Reporte de Cuentas puede ser DESC o ASC solo cambie en la parte de order como lo quiere ver.
-
-### Retiros (`/withdrawal`)
+### Retiros (`/withdrawals`)
 
 | Método | Ruta | Descripción | Auth | Rol |
 |--------|------|-------------|------|-----|
-| `POST` | `/withdrawal` | Retiros | Si | Admin |
+| `POST` | `/withdrawals` | Registra los retiros de efectivo o débito de una cuenta bancaria específica | Si | Admin |
 
-
+**Nota**: En este módulo se gestiona la salida de fondos del sistema, debido a que implica una disminución del saldo real.
 
 ### Modelos de Request
+
+---
+
+# Auth_Service
 
 ---
 
@@ -144,8 +159,19 @@ Base URL: `http://localhost:3001/api`
 
 ---
 
-#### Perfil del Usuario (`/user/me`)
-> **Nota:** Requiere un **Bearer Token** en el encabezado (Authorization). Devuelve la información del usuario autenticado.
+#### Listado de Usuarios (`/user`)
+> **Nota:** Este endpoint es de acceso restringido. Requiere un **Bearer Token** en el encabezado (Authorization) de un administrador.
+
+---
+
+#### Obtener a un Usuario por ID (`/user/{id}`)
+> **Nota:** Requiere el perfil del usuario que se desea obtener, solo administradores
+
+```
+{
+    "id": "usrGRKGznskZz6h"
+}
+```
 
 ---
 
@@ -178,29 +204,121 @@ Base URL: `http://localhost:3001/api`
 
 ---
 
-#### Listado de Usuarios (`/user`)
-> **Nota:** Este endpoint es de acceso restringido. Requiere un **Bearer Token** en el encabezado (Authorization) de un administrador.
+#### Perfil del Usuario (`/user/me`)
+> **Nota:** Requiere un **Bearer Token** en el encabezado (Authorization). Devuelve la información del usuario autenticado.
 
 ---
 
-#### Crear Nueva Cuenta Bancaria (`/accounts/create`)
-> **Nota:** Este endpoint requiere un **Bearer Token** en el encabezado (Authorization) de un administrador para crear la cuenta.
+# Core_Bank_Service API
+
+---
+
+#### Crear Nueva Cuenta Bancaria (`/accounts`)
+> **Nota:** Este endpoint requiere un **Bearer Token** en el encabezado (Authorization) de un administrador para crear la cuenta. Tipos (Monetaria o de Ahorro)
 
 ```json
 {
   "userId": "ID_DEL_USUARIO",
-  "type": "MONETARIA",
-  "initialBalance": 0
+  "type": "MONETARIA"
 }
 ```
 ---
 
-#### Realizar Depósito (`/api/deposit`)
+#### Deshabilitar (`/accounts/disable`)
+> **Nota:** Este endpoint requiere un **Bearer Token** en el encabezado (Authorization) de un administrador para deshabilitar la cuenta.
+
+```
+{
+    "accountNumber": "0000 0000 00 00"
+}
+```
+
+---
+
+#### Habilitar (`/accounts/enable`)
+> **Nota:** Este endpoint requiere un **Bearer Token** en el encabezado (Authorization) de un administrador para habilitar la cuenta.
+
+```
+{
+    "accountNumber": "0000 0000 00 00"
+}
+```
+---
+
+#### Visualizar Movimientos Completos (`/accounts/admin/all-movements?order=DESC`)
+> **Nota:** Este endpoint es de uso exclusivo para administradores. Requiere un **Bearer Token** en el encabezado (Authorization) de un administrador.
+
+**Parámetros de Consulta (Query Params):**
+```
+`order`: Define el orden de los movimientos (ej. `ASC` o `DESC`).
+```
+
+---
+
+#### Consultar estado de cuenta de un Usuario (`/accounts/admin/statement/{id}`)
+
+> **Nota:** Este endpoint es de uso exclusivo para administradores. Requiere un **Bearer Token** en el encabezado (Authorization) de un administrador.
+
+**Parámetros de Consulta (Query Params):**
+```
+`id`: Requiere el UUID de la cuenta.
+`order`: Define el orden de los movimientos (ej. `ASC` o `DESC`).
+```
+
+---
+
+#### Obtener el listado de cuentas bancarias (`/accounts/admin/all?order=ASC`)
+
+> **Nota:** Este endpoint es de uso exclusivo para administradores. Requiere un **Bearer Token** en el encabezado (Authorization) de un administrador.
+
+**Parámetros de Consulta (Query Params):**
+
+```
+`order`: Define el orden de los movimientos (ej. `ASC` o `DESC`).
+```
+
+---
+
+#### Consultar estado de cuenta(`/accounts/statement/{id}`)
+
+> **Nota:** Este endpoint es de uso exclusivo para usurios de la cuenta. Requiere un **Bearer Token** en el encabezado (Authorization).
+
+**Parámetros de Consulta (Query Params):**
+```
+`id`: Requiere el UUID de la cuenta.
+`order`: Define el orden de los movimientos (ej. `ASC` o `DESC`).
+```
+
+---
+
+#### Obtener resumen de cuenta(`/accounts/summary/{id}`)
+
+> **Nota:** Este endpoint es de uso exclusivo para usurios de la cuenta. Requiere un **Bearer Token** en el encabezado (Authorization).
+
+**Parámetros de Consulta (Query Params):**
+```
+`id`: Requiere el UUID de la cuenta.
+```
+
+---
+
+#### Obtener todas las cuentas del usuario logueado(`/accounts/my-accounts`)
+
+> **Nota:** Este endpoint es de uso exclusivo para usurios de la cuenta. Requiere un **Bearer Token** en el encabezado (Authorization).
+
+**Parámetros de Consulta (Query Params):**
+```
+`order`: Define el orden de los movimientos (ej. `ASC` o `DESC`).
+```
+
+---
+
+#### Realizar Depósito (`/deposit`)
 > **Nota:** Este endpoint requiere un **Bearer Token** en el encabezado (Authorization) de un administrador para autorizar el deposito.
 
 ```json
 {
-  "accountNumber": "No.Cuenta",
+  "accountNumber": "0000 0000 00 00",
   "amount": 2000.00,
   "description": "Depósito de nómina"
 }
@@ -208,57 +326,29 @@ Base URL: `http://localhost:3001/api`
 
 ---
 
-#### Actualizar Depósito (`/deposit/{id-de-deposito}`)
+#### Actualizar Depósito (`/deposit/{id}`)
 > **Nota:** Este endpoint es de uso exclusivo para administradores. Requiere un **Bearer Token** en el encabezado (Authorization) de un administrador.
 
 ```json
 {
-  "newAmount": 150.00
+  "amount": 500,
+  "description": "Corrección de monto: Depósito en efectivo"
 }
 ```
 
 ---
 
-#### Eliminar Depósito (`/deposit/{id-de-deposito}`)
-> **Nota:** Este endpoint es de uso exclusivo para administradores. Requiere un **Bearer Token** en el encabezado (Authorization) de un administrador.
-
-* `id-de-deposito`: El identificador único (UUID) del depósito que se desea eliminar.
-
----
-
-#### Realizar Transferencia (`/transfer`)
+#### Realizar Transferencia (`/transfers`)
 > **Nota:** Este endpoint requiere un **Bearer Token** en el encabezado (Authorization). Puede ser ejecutado por el usuario dueño de la cuenta emisora o por un administrador con `ADMIN_ROLE`.
 
 ```json
 {
-  "senderAccountNumber": "No.Cuenta-Emisora",
-  "receiverAccountNumber": "No.Cuenta-Receptora",
-  "amount": 2000.00
+  "senderAccountNumber": "0000 0000 00 00",
+  "receiverAccountNumber": "0000 0000 00 00",
+  "amount": 200.00,
+  "description": "Pago de servicios"
 }
 ```
-
----
-
-#### Consultar Detalle de Cuenta (`/accounts/{No.Cuenta}`)
-> **Nota:** Este endpoint requiere un **Bearer Token** en el encabezado (Authorization). Solo puede ser consultado por el usuario propietario de la cuenta o por un administrador con `ADMIN_ROLE`.
-
-* `No.Cuenta`: El número de cuenta bancaria que se desea consultar.
-
----
-
-#### Historial de cuenta (`/accounts/history/{no.Cuenta}`)
-> **Nota:** Este endpoint requiere un **Bearer Token** en el encabezado (Authorization). Solo puede ser consultado por el usuario propietario de la cuenta o por un administrador con el rol `ADMIN_ROLE`.
-
-**Parámetros de URL:**
-* `no.Cuenta`: El número de cuenta (ej. `7269909557`) del cual se desea obtener el historial de movimientos.
-
----
-
-#### Reporte de Cuentas (Movimientos) (`/accounts/admin/top-movements?order=DESC`)
-> **Nota:** Este endpoint es de uso exclusivo para administradores. Requiere un **Bearer Token** en el encabezado (Authorization) de un administrador.
-
-**Parámetros de Consulta (Query Params):**
-* `order`: Define el orden de los movimientos (ej. `ASC` o `DESC`).
 
 ---
 
@@ -268,12 +358,11 @@ Base URL: `http://localhost:3001/api`
 ```json
 {
     "accountNumber": "No.Cuenta",
-    "amount": 340.00,
-    "description": "Retiro de efectivo"
+    "amount": 300.00
 }
 ```
 
-* `No.Cuenta`: El número de cuenta (ej. `7269909557`) del cual se desea retirar.
+* `No.Cuenta`: El número de cuenta (ej. `0000 0000 00 00`) del cual se desea retirar.
 
 ---
 
@@ -319,11 +408,22 @@ auth-service/
 ```
 core_bank_service/
 ├── configs/
+│   ├── associations.js                 # Define cómo se relacionan las tablas
+│   ├── configuration.js                # Tiene las opciones de CORS
+│   ├── documentation.js                # Configura Swagger
+│   ├── helmets.js                      # Configura Helmet
+│   ├── rateLimit.js                    # Controla el limite de periciones
 │   ├── app.js                          # Configuración principal del servidor
 │   └── db.js                           # Conexión a MongoDB
 │
 ├── middlewares/
-│   └── auth.middleware.js              # Actúa como la primera barrera de seguridad.
+│   ├── account-validator.js            # Valida que el formate de cuenta sean correctos
+│   ├── check-validators.js             # Intercepta peticiones y frena el flujo (express-validator)
+│   ├── deposit-validator.js            # Asegura que los depósitos y sus modificaciones
+│   ├── transfer-validator.js           # Garantiza las transferencias
+│   ├── validate-JWT.js                 # Actúa como la primera barrera de seguridad.
+│   ├── validate-user.js                # Consulta a tiempo real al servidos .NET
+│   └── withdrawal-validator.js         # Verificación de retiros
 │
 ├── src/
 │   ├── account/                        # Módulo de cuentas
@@ -335,23 +435,161 @@ core_bank_service/
 │   ├── deposits/                       # Módulo de depositos
 │   │   ├── deposits.controller.js
 │   │   ├── deposits.model.js
-│   │   └── deposits.routes.js
+│   │   ├── deposits.routes.js
+│   │   └── deposits.service.js 
 │   │
-│   ├── transfers/                      # Módulo de equipos
+│   ├── transfers/                      # Módulo de transferencias
 │   │   ├── transfers.controller.js
 │   │   ├── transfers.model.js
-│   │   └── transfers.routes.js
+│   │   ├── transfers.routes.js
+│   │   └── deposits.service.js 
 │   │
-│   └── withdrawal/                     # Módulo de torneos
+│   └── withdrawal/                     # Módulo de retiros
 │       ├── withdrawal.controller.js    
 │       ├── withdrawal.model.js
-│       └── withdrawal.routes.js
+│       ├── withdrawal.routes.js
+│       └── deposits.service.js 
 │
-├── utils/                            # Utilidades generales
-├── index.js                          # Punto de entrada
-├── package.json                      # Dependencias y scripts
-├── pnpm-lock.yaml                    # Lock file de pnpm
+├── utils/                              # Utilidades generales
+├── index.js                            # Punto de entrada
+├── package.json                        # Dependencias y scripts
+├── pnpm-lock.yaml                      # Lock file de pnpm
 └── README.md
+```
+
+---
+
+```
+bank_client_web/
+├── public/
+│   ├── favicon.svg
+│   └── icons.svg
+│   
+├── src/
+│   ├── app/
+│   │   ├── layouts/
+│   │   │   └── DashboardPage.jsx
+│   │   │ 
+│   │   ├── router/
+│   │   │   ├── AccountsContainer.jsx
+│   │   │   ├── AppRouter.jsx
+│   │   │   ├── ProtecterRoute.jsx
+│   │   │   └── RoleGuard.jsx
+│   │   │ 
+│   │   ├── App.jsx
+│   │   └── Main.jsx
+│   │ 
+│   ├── assets/
+│   │   ├── hero.png
+│   │   ├── kingbankicon.png
+│   │   ├── react.svg
+│   │   └── vite.svg
+│   │   
+│   ├── features/
+│   │   ├── accounts/
+│   │   │    ├── components/
+│   │   │    │    ├── Accounts.jsx
+│   │   │    │    ├── CreateAccountModal.jsx
+│   │   │    │    ├── DisableAccountModal.jsx
+│   │   │    │    ├── EnableAccountModal.jsx
+│   │   │    │    └── Movements.jsx
+│   │   │    |    
+│   |   |    └── store/
+│   │   │         └── useAccountStore.js
+│   │   │    
+│   │   ├── accountsuser/
+│   │   │    ├── components/
+│   │   │    │    ├── MovementsUser.jsx
+│   │   │    │    └── MyAccounts.jsx
+│   │   │    |    
+│   |   |    └── store/
+│   │   │         └── useUserAccountStore.js
+│   │   │    
+│   │   ├── auth/
+│   │   │    ├── components/
+│   │   │    │    ├── LoginForm.jsx
+│   │   │    │    └── Spinner.jsx
+│   │   │    |    
+│   |   |    ├── hooks/
+│   │   │    │    └── useVerifyEmail.jsx
+│   │   │    |    
+│   |   |    ├── pages/
+│   │   │    │    ├── LoginPage.jsx
+│   │   │    │    └── VerifyEmailPage.jsx
+│   │   │    |    
+│   |   |    └── store/
+│   │   │         ├── authStore.js
+│   │   │         └── uiStore.js
+│   │   │        
+│   │   ├── deposits/
+│   │   │    ├── components/
+│   │   │    │    └── Deposits.jsx
+│   │   │    |    
+│   |   |    └── store/
+│   │   │         └── useDepositStore.js
+│   │   │    
+│   │   ├── transfers/
+│   │   │    ├── components/
+│   │   │    │    ├── Transfers.jsx
+│   │   │    |    
+│   |   |    └── store/
+│   │   │         └── useTransferStore.js
+│   │   │    
+│   │   ├── users/
+│   |   |    ├── components/
+│   │   │    │    ├── AddUserForm.jsx
+│   │   │    │    ├── AssingRoleModal.jsx
+│   │   │    │    ├── ProfileViewer.jsx
+│   │   │    │    ├── UpdateProfile.jsx
+│   │   │    │    ├── UpdateUserForm.jsx
+│   │   │    │    └── Users.jsx
+│   │   │    |    
+│   |   |    └── store/
+│   │   │         └── useUserManagementStore.js
+│   │   │        
+│   │   └── withdrawals/
+│   |        ├── components/
+│   │        │    └── Withdrawals.jsx
+│   │        |    
+│   |        └── store/
+│   │             └── useWithdrawalStore.js
+│   │            
+│   ├── shared/
+│   │   ├── api/
+│   │   │    ├── api.js
+│   │   │    ├── auth.js
+│   │   │    ├── coreBank.js
+│   │   │    └── index.js
+│   │   |    
+│   │   ├── components/
+│   │   │    ├── layout/
+│   │   │    |    ├── DashboardContainer.jsx
+│   │   │    |    ├── Navbar.jsx
+│   │   │    |    └── Sidebar.jsx
+│   │   |    |
+│   │   │    └── ui/
+│   │   │         └── UserMenu.jsx
+│   │   |    
+│   │   └── utils/
+│   │        ├── axios.js
+│   │        ├── formatter.js
+│   │        └── toast.js
+│   │           
+│   └── styles/
+│       ├── App.css
+│       └── index.css
+│   
+├── .env
+├── .gitignore.
+├── .prettierignore
+├── .prettierrc
+├── README.md
+├── eslint.config.js
+├── index.html
+├── package.json
+├── pnpm-lock.yaml
+└── vite.config.js
+
 ```
 
 ### Requisitos Previos
@@ -361,7 +599,7 @@ core_bank_service/
 - Node.js 22+
 - pnpm 10+ (Package Manager)
 
-### Variables de Entorno
+### Variables de Entorno de CoreBank
 
 Crear archivo `.env` en la raíz del proyecto:
 
@@ -375,6 +613,13 @@ DB_PORT=5436
 SECRET_KEY=$ecretKeyForKingProgramingTeam70
 TZ='America/Guatemala'
 ```
+### Variables de Entorno de React
+
+```env
+VITE_AUTH_URL=http://localhost:5288/api/v1
+VITE_CORE_BANK_SERVICE_URL=http://localhost:3001/api
+```
+
 
 ### Instalación y Ejecución
 
@@ -420,22 +665,45 @@ El servicio estará disponible en: `http://localhost:5288`
 Abre una nueva ventana de visual y abre la carpeta del proyecto hasta el core_bank_service
 ```
 
-6. **Instalar dependencias con pnpm**
+8. **Instalar dependencias con pnpm**
 ```bash
 pnpm install
 ```
 
-7. **Abrir en Visual Studio Code**
+9. **Abrir en Visual Studio Code**
 ```bash
 Crea un archivo .env en la carpeta core_bank_service y pega las variables que se dan más abajo.
 ```
 
-8. **Ejecutar en modo desarrollo**
+10. **Ejecutar en modo desarrollo**
 ```bash
 pnpm run dev
 ```
 
 El servidor estará disponible en `http://localhost:3001`
+
+
+11. **Abrir en Visual Studio Code**
+```bash
+Abre una nueva ventana de visual y abre la carpeta del proyecto hasta el bank_client_web
+```
+
+12. **Abre terminal**
+```bash
+Abre una terminal en Visual Studio Code
+```
+
+13. **Instalar dependencias con pnpm**
+```bash
+pnpm install
+```
+
+14. **Ejecutar en modo desarrollo**
+```bash
+pnpm run dev
+```
+
+El servidor estará disponible en `http://localhost:5173`
 
 
 
