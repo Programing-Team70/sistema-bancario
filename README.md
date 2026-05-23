@@ -718,6 +718,9 @@ El servidor estará disponible en `http://localhost:5173`
 
 Este proyecto está licenciado bajo la Licencia MIT. Consulte el archivo [LICENSE](LICENSE) para más detalles.
 
+## Archivos Word, Cartas y Planificación
+* [Ver Planificación Actualizada](./Planificación%20-%20Sistema%20Bancario.docx)
+
 ## Autor
 
 **Programming Team**  
