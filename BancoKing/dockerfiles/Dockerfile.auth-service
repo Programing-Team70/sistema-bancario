@@ -1,0 +1,23 @@
+# Etapa 1: Compilacion
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+COPY BancoKing/authentication-service/auth-service/*.sln ./
+COPY BancoKing/authentication-service/auth-service/src/AuthService.Api/*.csproj src/AuthService.Api/
+COPY BancoKing/authentication-service/auth-service/src/AuthService.Application/*.csproj src/AuthService.Application/
+COPY BancoKing/authentication-service/auth-service/src/AuthService.Domain/*.csproj src/AuthService.Domain/
+COPY BancoKing/authentication-service/auth-service/src/AuthService.Persistence/*.csproj src/AuthService.Persistence/
+
+RUN dotnet restore
+
+COPY BancoKing/authentication-service/auth-service/ ./
+
+RUN dotnet publish "src/AuthService.Api/AuthService.Api.csproj" -c Release -o /app/publish
+
+# Etapa 2: Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+
+COPY --from=build /app/publish .
+
+ENTRYPOINT ["dotnet", "AuthService.Api.dll"]

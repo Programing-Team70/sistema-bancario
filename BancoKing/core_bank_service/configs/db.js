@@ -11,6 +11,8 @@ console.log("User:", process.env.DB_USER);
 console.log("Port:", process.env.DB_PORT);
 console.log("---------------------------------------");
 
+const useSsl = process.env.DB_SSL === "true";
+
 export const sequelize = new Sequelize(
   process.env.DB_NAME,
   process.env.DB_USER,
@@ -25,6 +27,14 @@ export const sequelize = new Sequelize(
       timestamps: true,
       underscored: true,
     },
+    ...(useSsl && {
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false,
+        },
+      },
+    }),
   },
 );
 

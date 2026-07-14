@@ -7,7 +7,9 @@ export const validateUserExists = async (req, res, next) => {
 
     if (!userId) return next();
 
-    const dotnetUrl = `http://localhost:5288/api/v1/user/${userId}`;
+    const authBase =
+      process.env.AUTH_SERVICE_URL || "http://localhost:5288/api/v1";
+    const dotnetUrl = `${authBase.replace(/\/$/, "")}/user/${userId}`;
     const response = await axios.get(dotnetUrl, {
       headers: { Authorization: token },
     });
