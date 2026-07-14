@@ -40,6 +40,8 @@ export const AddUserForm = ({ isOpen, onClose }) => {
   const onSubmit = async (data) => {
     const payload = {
       ...data,
+      dpi: data.dpi,
+      monthlyIncome: Number(data.monthlyIncome),
       role: 'USER_ROLE',
     };
 
@@ -170,6 +172,10 @@ export const AddUserForm = ({ isOpen, onClose }) => {
                       type='tel'
                       {...register('phone', {
                         required: 'El teléfono es obligatorio',
+                        minLength: {
+                          value: 8,
+                          message: 'Mínimo 8 dígitos',
+                        },
                       })}
                       placeholder='Teléfono'
                     />
@@ -188,6 +194,10 @@ export const AddUserForm = ({ isOpen, onClose }) => {
                       type={showPassword ? 'text' : 'password'}
                       {...register('password', {
                         required: 'La contraseña es obligatoria',
+                        minLength: {
+                          value: 8,
+                          message: 'Mínimo 8 caracteres',
+                        },
                       })}
                       placeholder='Password'
                     />
@@ -222,6 +232,14 @@ export const AddUserForm = ({ isOpen, onClose }) => {
                     <input
                       {...register('dpi', {
                         required: 'El DPI es obligatorio',
+                        minLength: {
+                          value: 13,
+                          message: 'El DPI debe tener 13 dígitos',
+                        },
+                        maxLength: {
+                          value: 13,
+                          message: 'El DPI debe tener 13 dígitos',
+                        },
                       })}
                       placeholder='9876545210101'
                     />
@@ -276,6 +294,10 @@ export const AddUserForm = ({ isOpen, onClose }) => {
                       type='number'
                       {...register('monthlyIncome', {
                         required: 'Los ingresos son obligatorios',
+                        min: {
+                          value: 101,
+                          message: 'Debe ser mayor a Q100',
+                        },
                       })}
                       placeholder='Pago'
                     />

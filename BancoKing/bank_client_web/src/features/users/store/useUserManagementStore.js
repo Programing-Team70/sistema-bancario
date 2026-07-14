@@ -62,7 +62,15 @@ export const useUserManagementStore = create((set, get) => ({
     } catch (err) {
       console.log(err.response?.data);
 
-      const errorMessage = err.response?.data?.message || 'Error al registrar el usuario';
+      const validationErrors = err.response?.data?.errors;
+      const firstValidationError =
+        validationErrors &&
+        Object.values(validationErrors).flat()?.[0];
+
+      const errorMessage =
+        err.response?.data?.message ||
+        firstValidationError ||
+        'Error al registrar el usuario';
 
       set({
         loading: false,
