@@ -2,7 +2,8 @@ import axios from '../utils/axios.js';
 import { useAuthStore } from '../../features/auth/store/authStore.js';
 
 const axiosAuth = axios.create({
-  baseURL: import.meta.env.VITE_AUTH_URL,
+  baseURL:
+    import.meta.env.VITE_AUTH_URL || 'https://banco-king-auth.onrender.com/api/v1',
   timeout: 90000,
   headers: {
     'Content-Type': 'application/json',
@@ -10,7 +11,9 @@ const axiosAuth = axios.create({
 });
 
 const axiosCoreBank = axios.create({
-  baseURL: import.meta.env.VITE_CORE_BANK_SERVICE_URL,
+  baseURL:
+    import.meta.env.VITE_CORE_BANK_SERVICE_URL ||
+    'https://core-bank-service.onrender.com/api',
   timeout: 90000,
   headers: {
     'Content-Type': 'application/json',

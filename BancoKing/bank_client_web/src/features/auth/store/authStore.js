@@ -1,17 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { login as loginRequest, wakeAuthService } from '../../../shared/api/auth.js';
-
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const isRetryableLoginError = (err) =>
-  !err.response || err.code === 'ECONNABORTED' || err.response?.status >= 502;
+import { login as loginRequest } from '../../../shared/api/auth.js';
 
 const getLoginErrorMessage = (err) => {
   const msg = err.response?.data?.message;
   if (msg) return msg;
   if (err.code === 'ECONNABORTED' || !err.response) {
-    return 'El servidor tardó demasiado. Toca entrar otra vez y espera ~1 min.';
+    return 'El servidor tardó en responder. Espera 1 minuto e intenta otra vez.';
   }
   return 'Credenciales incorrectas';
 };
@@ -67,68 +62,51 @@ export const useAuthStore = create(
     },
 
     login: async ({ emailOrUsername, password }) => {
-      set({ loading: true, loadingMessage: 'Despertando servidor...', error: null });
-      const credentials = { emailOrUsername, password };
-      let lastError = null;
-
-      const serverReady = await wakeAuthService((attempt) => {
-        set({ loadingMessage: `Despertando servidor... (${attempt}/8)` });
+      set({
+        loading: true,
+        loadingMessage: 'Conectando con el servidor (puede tardar ~1 min)...',
+        error: null,
       });
 
-      if (!serverReady) {
-        set({ loadingMessage: 'Servidor lento, intentando login...' });
-        await sleep(5000);
-      }
+      const credentials = {
+        emailOrUsername: emailOrUsername.trim(),
+        password: password.trim(),
+      };
 
-      for (let attempt = 0; attempt < 3; attempt += 1) {
-        try {
-          if (attempt > 0) {
-            set({ loadingMessage: `Reintentando login... (${attempt + 1}/3)` });
-            await sleep(10000);
-          } else {
-            set({ loadingMessage: 'Validando credenciales...' });
-          }
+      try {
+        const { data } = await loginRequest(credentials);
+        const role = data?.userDetails?.role;
 
-          const { data } = await loginRequest(credentials);
-          const role = data?.userDetails?.role;
-
-          if (role !== 'ADMIN_ROLE' && role !== 'USER_ROLE') {
-            const permissionMessage = 'No tienes permisos para acceder';
-            set({
-              user: null,
-              token: null,
-              isAuthenticated: false,
-              loading: false,
-              loadingMessage: '',
-              error: permissionMessage,
-            });
-
-            setTimeout(() => set({ error: null }), 4000);
-            return { success: false, error: permissionMessage };
-          }
-
+        if (role !== 'ADMIN_ROLE' && role !== 'USER_ROLE') {
+          const permissionMessage = 'No tienes permisos para acceder';
           set({
-            user: data.userDetails,
-            token: data.token,
-            expiresAt: data.expiresIn,
-            isAuthenticated: true,
+            user: null,
+            token: null,
+            isAuthenticated: false,
             loading: false,
             loadingMessage: '',
-            error: null,
+            error: permissionMessage,
           });
-          return { success: true };
-        } catch (err) {
-          lastError = err;
-          if (!isRetryableLoginError(err) || attempt === 2) {
-            break;
-          }
+          setTimeout(() => set({ error: null }), 5000);
+          return { success: false, error: permissionMessage };
         }
-      }
 
-      const msg = getLoginErrorMessage(lastError);
-      set({ error: msg, loading: false, loadingMessage: '' });
-      setTimeout(() => set({ error: null }), 6000);
-      return { success: false, error: msg };
+        set({
+          user: data.userDetails,
+          token: data.token,
+          expiresAt: data.expiresAt,
+          isAuthenticated: true,
+          loading: false,
+          loadingMessage: '',
+          error: null,
+        });
+        return { success: true };
+      } catch (err) {
+        const msg = getLoginErrorMessage(err);
+        set({ error: msg, loading: false, loadingMessage: '' });
+        setTimeout(() => set({ error: null }), 6000);
+        return { success: false, error: msg };
+      }
     },
   })),
   {
