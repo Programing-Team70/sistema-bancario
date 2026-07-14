@@ -1,23 +1,46 @@
 import { axiosAuth } from './api';
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const getAuthBaseUrl = () => {
   const authUrl =
     import.meta.env.VITE_AUTH_URL || 'https://banco-king-auth.onrender.com/api/v1';
   return authUrl.replace(/\/api\/v1\/?$/, '');
 };
 
-export const wakeAuthService = async () => {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 90000);
-  try {
-    await fetch(`${getAuthBaseUrl()}/health`, {
-      method: 'GET',
-      mode: 'cors',
-      signal: controller.signal,
-    });
-  } finally {
-    clearTimeout(timeout);
+export const wakeAuthService = async (onProgress) => {
+  const baseUrl = getAuthBaseUrl();
+
+  for (let attempt = 1; attempt <= 6; attempt += 1) {
+    onProgress?.(attempt);
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 90000);
+
+      try {
+        const response = await fetch(`${baseUrl}/health`, {
+          method: 'GET',
+          mode: 'cors',
+          signal: controller.signal,
+        });
+
+        if (response.ok) {
+          return true;
+        }
+      } finally {
+        clearTimeout(timeout);
+      }
+    } catch {
+      // Render free tier may return 502 while waking up.
+    }
+
+    if (attempt < 6) {
+      await sleep(15000);
+    }
   }
+
+  return false;
 };
 
 export const login = async (data) => {

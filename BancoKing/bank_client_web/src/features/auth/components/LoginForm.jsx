@@ -11,6 +11,7 @@ export const LoginForm = () => {
 
   const login = useAuthStore((state) => state.login);
   const loading = useAuthStore((state) => state.loading);
+  const loadingMessage = useAuthStore((state) => state.loadingMessage);
   const error = useAuthStore((state) => state.error);
 
   const {
@@ -72,7 +73,7 @@ export const LoginForm = () => {
       )}
 
       <button type='submit' disabled={loading} className='btn-primary'>
-        {loading ? 'Conectando servidor...' : 'Entrar a mi cuenta'}
+        {loading ? loadingMessage || 'Conectando servidor...' : 'Entrar a mi cuenta'}
       </button>
     </form>
   );

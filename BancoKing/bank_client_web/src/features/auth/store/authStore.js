@@ -11,11 +11,10 @@ const getLoginErrorMessage = (err) => {
   const msg = err.response?.data?.message;
   if (msg) return msg;
   if (err.code === 'ECONNABORTED' || !err.response) {
-    return 'El servidor está iniciando (puede tardar ~1 min). Intenta de nuevo.';
+    return 'El servidor tardó demasiado. Toca entrar otra vez y espera ~1 min.';
   }
   return 'Credenciales incorrectas';
 };
-import { showError } from '../../../shared/utils/toast.js';
 
 export const useAuthStore = create(
   persist((set, get) => ({
@@ -23,6 +22,7 @@ export const useAuthStore = create(
     token: null,
     expiresAt: null,
     loading: false,
+    loadingMessage: '',
     error: null,
     isLoadingAuth: true,
     isAuthenticated: false,
@@ -61,22 +61,36 @@ export const useAuthStore = create(
         expiresAt: null,
         isAuthenticated: false,
         loading: false,
+        loadingMessage: '',
         error: null,
       });
     },
 
     login: async ({ emailOrUsername, password }) => {
-      set({ loading: true, error: null });
+      set({ loading: true, loadingMessage: 'Despertando servidor...', error: null });
       const credentials = { emailOrUsername, password };
       let lastError = null;
+
+      const serverReady = await wakeAuthService((attempt) => {
+        set({ loadingMessage: `Despertando servidor... (${attempt}/6)` });
+      });
+
+      if (!serverReady) {
+        const msg = 'El servidor está iniciando. Espera 1 minuto y toca entrar otra vez.';
+        set({ error: msg, loading: false, loadingMessage: '' });
+        setTimeout(() => set({ error: null }), 6000);
+        return { success: false, error: msg };
+      }
 
       for (let attempt = 0; attempt < 3; attempt += 1) {
         try {
           if (attempt > 0) {
-            await sleep(5000);
+            set({ loadingMessage: `Reintentando login... (${attempt + 1}/3)` });
+            await sleep(10000);
+          } else {
+            set({ loadingMessage: 'Validando credenciales...' });
           }
 
-          await wakeAuthService().catch(() => {});
           const { data } = await loginRequest(credentials);
           const role = data?.userDetails?.role;
 
@@ -87,6 +101,7 @@ export const useAuthStore = create(
               token: null,
               isAuthenticated: false,
               loading: false,
+              loadingMessage: '',
               error: permissionMessage,
             });
 
@@ -100,6 +115,7 @@ export const useAuthStore = create(
             expiresAt: data.expiresIn,
             isAuthenticated: true,
             loading: false,
+            loadingMessage: '',
             error: null,
           });
           return { success: true };
@@ -112,8 +128,8 @@ export const useAuthStore = create(
       }
 
       const msg = getLoginErrorMessage(lastError);
-      set({ error: msg, loading: false });
-      setTimeout(() => set({ error: null }), 4000);
+      set({ error: msg, loading: false, loadingMessage: '' });
+      setTimeout(() => set({ error: null }), 6000);
       return { success: false, error: msg };
     },
   })),
