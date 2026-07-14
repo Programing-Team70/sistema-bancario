@@ -6,6 +6,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import { swaggerDocs, swaggerUi } from "./documentation.js";
 import { dbConnection } from "./db.js";
+import { jwtConfig } from "./jwt.js";
 import { corsOptions } from "./configuration.js";
 import { helmetOptions } from "./helmets.js";
 import { requestLimit } from "./rateLimit.js";
@@ -58,6 +59,9 @@ export const initServer = async () => {
     configs(app);
     setupAssociations();
     await dbConnection();
+    console.log(
+      `JWT | issuer=${jwtConfig.issuer} audience=${jwtConfig.audience} secretConfigured=${Boolean(jwtConfig.secret)}`,
+    );
     routes(app);
 
     const port = process.env.PORT || 3000;
