@@ -72,14 +72,12 @@ export const useAuthStore = create(
       let lastError = null;
 
       const serverReady = await wakeAuthService((attempt) => {
-        set({ loadingMessage: `Despertando servidor... (${attempt}/6)` });
+        set({ loadingMessage: `Despertando servidor... (${attempt}/8)` });
       });
 
       if (!serverReady) {
-        const msg = 'El servidor está iniciando. Espera 1 minuto y toca entrar otra vez.';
-        set({ error: msg, loading: false, loadingMessage: '' });
-        setTimeout(() => set({ error: null }), 6000);
-        return { success: false, error: msg };
+        set({ loadingMessage: 'Servidor lento, intentando login...' });
+        await sleep(5000);
       }
 
       for (let attempt = 0; attempt < 3; attempt += 1) {

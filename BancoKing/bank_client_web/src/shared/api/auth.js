@@ -11,8 +11,14 @@ const getAuthBaseUrl = () => {
 export const wakeAuthService = async (onProgress) => {
   const baseUrl = getAuthBaseUrl();
 
-  for (let attempt = 1; attempt <= 6; attempt += 1) {
+  for (let attempt = 1; attempt <= 8; attempt += 1) {
     onProgress?.(attempt);
+
+    try {
+      await fetch(`${baseUrl}/health`, { method: 'GET', mode: 'no-cors' });
+    } catch {
+      // no-cors still sends the request and helps wake Render.
+    }
 
     try {
       const controller = new AbortController();
@@ -32,11 +38,11 @@ export const wakeAuthService = async (onProgress) => {
         clearTimeout(timeout);
       }
     } catch {
-      // Render free tier may return 502 while waking up.
+      // During cold start Render may return 502 without CORS headers.
     }
 
-    if (attempt < 6) {
-      await sleep(15000);
+    if (attempt < 8) {
+      await sleep(20000);
     }
   }
 
