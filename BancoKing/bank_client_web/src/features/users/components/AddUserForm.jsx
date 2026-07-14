@@ -48,7 +48,7 @@ export const AddUserForm = ({ isOpen, onClose }) => {
     const result = await registerUser(payload);
 
     if (result?.success) {
-      toast.success('Usuario registrado en Banco King');
+      toast.success('Usuario registrado. Revisa el correo de verificación.');
 
       reset();
       onClose();

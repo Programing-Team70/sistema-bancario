@@ -44,6 +44,7 @@ public class AuthService(
             throw new BusinessException(ErrorCodes.INSUFFICIENT_MONTHLY_INCOME, "Los ingresos mensuales deben ser mayores a Q100.00");
         }
 
+        var emailVerificationToken = TokenGenerator.GenerateEmailVerificationToken();
         var userId = UuidGenerator.GenerateUserId();
         var userProfileId = UuidGenerator.GenerateUserId();
         var userEmailId = UuidGenerator.GenerateUserId();
@@ -63,7 +64,7 @@ public class AuthService(
             UserName = registerDto.Username,
             Email = registerDto.Email.ToLowerInvariant(),
             Password = passwordHashService.HashPassword(registerDto.Password),
-            Status = true,
+            Status = false,
             UserProfile = new UserProfile
             {
                 Id = userProfileId,
@@ -78,9 +79,9 @@ public class AuthService(
             {
                 Id = userEmailId,
                 UserId = userId,
-                EmailVerified = true,
-                EmailVerificationToken = null,
-                EmailVerificationTokenExpiry = null
+                EmailVerified = false,
+                EmailVerificationToken = emailVerificationToken,
+                EmailVerificationTokenExpiry = DateTime.UtcNow.AddHours(24)
             },
             UserRoles =
             [
@@ -96,25 +97,17 @@ public class AuthService(
         var createdUser = await userRepository.CreateUserAsync(user);
         logger.LogUserRegistered(createdUser.UserName);
 
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await emailService.SendWelcomeEmailAsync(createdUser.Email, createdUser.UserName);
-                logger.LogInformation("Welcome email sent to {Email}", createdUser.Email);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed to send welcome email to {Email}", createdUser.Email);
-            }
-        });
+        await emailService.SendEmailVerificationAsync(
+            createdUser.Email,
+            createdUser.UserName,
+            emailVerificationToken);
 
         return new RegisterResponseDto
         {
             Success = true,
             User = MapToUserResponseDto(createdUser),
-            Message = "Usuario registrado exitosamente.",
-            EmailVerificationRequired = false
+            Message = "Usuario registrado. Se envió un correo de verificación.",
+            EmailVerificationRequired = true
         };
     }
 
