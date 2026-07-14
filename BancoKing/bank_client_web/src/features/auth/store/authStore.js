@@ -1,6 +1,20 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { login as loginRequest } from '../../../shared/api';
+import { login as loginRequest, wakeAuthService } from '../../../shared/api/auth.js';
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isRetryableLoginError = (err) =>
+  !err.response || err.code === 'ECONNABORTED' || err.response?.status >= 502;
+
+const getLoginErrorMessage = (err) => {
+  const msg = err.response?.data?.message;
+  if (msg) return msg;
+  if (err.code === 'ECONNABORTED' || !err.response) {
+    return 'El servidor está iniciando (puede tardar ~1 min). Intenta de nuevo.';
+  }
+  return 'Credenciales incorrectas';
+};
 import { showError } from '../../../shared/utils/toast.js';
 
 export const useAuthStore = create(
@@ -52,50 +66,55 @@ export const useAuthStore = create(
     },
 
     login: async ({ emailOrUsername, password }) => {
-      try {
-        set({ loading: true, error: null });
-        const { data } = await loginRequest({ emailOrUsername, password });
-        const role = data?.userDetails?.role;
+      set({ loading: true, error: null });
+      const credentials = { emailOrUsername, password };
+      let lastError = null;
 
-        if (role !== 'ADMIN_ROLE' && role !== 'USER_ROLE') {
-          const permissionMessage = 'No tienes permisos para acceder';
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          if (attempt > 0) {
+            await sleep(5000);
+          }
+
+          await wakeAuthService().catch(() => {});
+          const { data } = await loginRequest(credentials);
+          const role = data?.userDetails?.role;
+
+          if (role !== 'ADMIN_ROLE' && role !== 'USER_ROLE') {
+            const permissionMessage = 'No tienes permisos para acceder';
+            set({
+              user: null,
+              token: null,
+              isAuthenticated: false,
+              loading: false,
+              error: permissionMessage,
+            });
+
+            setTimeout(() => set({ error: null }), 4000);
+            return { success: false, error: permissionMessage };
+          }
+
           set({
-            user: null,
-            token: null,
-            isAuthenticated: false,
+            user: data.userDetails,
+            token: data.token,
+            expiresAt: data.expiresIn,
+            isAuthenticated: true,
             loading: false,
-            error: permissionMessage,
+            error: null,
           });
-
-          setTimeout(() => set({ error: null }), 2000);
-
-          return { success: false, error: permissionMessage };
+          return { success: true };
+        } catch (err) {
+          lastError = err;
+          if (!isRetryableLoginError(err) || attempt === 2) {
+            break;
+          }
         }
-
-        set({
-          user: data.userDetails,
-          token: data.token,
-          expiresAt: data.expiresIn,
-          isAuthenticated: true,
-          loading: false,
-          error: null,
-        });
-        return { success: true };
-      } catch (err) {
-        let msg = err.response?.data?.message;
-        if (!msg && err.code === 'ECONNABORTED') {
-          msg =
-            'El servidor está despertando (puede tardar ~1 min). Espera e intenta de nuevo.';
-        } else if (!msg && !err.response) {
-          msg =
-            'No se pudo conectar al servidor. Verifica tu internet e intenta de nuevo.';
-        } else if (!msg) {
-          msg = 'Credenciales incorrectas';
-        }
-        set({ error: msg, loading: false });
-        setTimeout(() => set({ error: null }), 2000);
-        return { success: false, error: msg };
       }
+
+      const msg = getLoginErrorMessage(lastError);
+      set({ error: msg, loading: false });
+      setTimeout(() => set({ error: null }), 4000);
+      return { success: false, error: msg };
     },
   })),
   {

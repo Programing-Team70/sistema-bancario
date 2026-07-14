@@ -1,5 +1,25 @@
 import { axiosAuth } from './api';
 
+const getAuthBaseUrl = () => {
+  const authUrl =
+    import.meta.env.VITE_AUTH_URL || 'https://banco-king-auth.onrender.com/api/v1';
+  return authUrl.replace(/\/api\/v1\/?$/, '');
+};
+
+export const wakeAuthService = async () => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90000);
+  try {
+    await fetch(`${getAuthBaseUrl()}/health`, {
+      method: 'GET',
+      mode: 'cors',
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
 export const login = async (data) => {
   return await axiosAuth.post('/Auth/Login', data);
 };
