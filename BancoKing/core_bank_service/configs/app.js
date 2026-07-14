@@ -60,7 +60,7 @@ export const initServer = async () => {
     setupAssociations();
     await dbConnection();
     console.log(
-      `JWT | issuer=${jwtConfig.issuer} audience=${jwtConfig.audience} secretConfigured=${Boolean(jwtConfig.secret)}`,
+      `JWT | secrets=${jwtConfig.secrets.length} issuer=${jwtConfig.issuer} audience=${jwtConfig.audience}`,
     );
     routes(app);
 

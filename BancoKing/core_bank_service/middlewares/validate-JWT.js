@@ -3,6 +3,32 @@
 import jwt from "jsonwebtoken";
 import { jwtConfig } from "../configs/jwt.js";
 
+const verifyOptions = {
+  algorithms: ["HS256"],
+  issuer: jwtConfig.issuer,
+  audience: jwtConfig.audience,
+};
+
+const verifyWithSecrets = (token) => {
+  let lastError = null;
+
+  for (const secret of jwtConfig.secrets) {
+    try {
+      return jwt.verify(token, secret, verifyOptions);
+    } catch (err) {
+      lastError = err;
+    }
+
+    try {
+      return jwt.verify(token, secret, { algorithms: ["HS256"] });
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  throw lastError;
+};
+
 export const validateJWT = (req, res, next) => {
   try {
     let token = req.headers.authorization;
@@ -12,11 +38,7 @@ export const validateJWT = (req, res, next) => {
 
     token = token.replace(/^Bearer\s+/i, "");
 
-    const decoded = jwt.verify(token, jwtConfig.secret, {
-      algorithms: ["HS256"],
-      issuer: jwtConfig.issuer,
-      audience: jwtConfig.audience,
-    });
+    const decoded = verifyWithSecrets(token);
 
     req.user = {
       uid: decoded.sub || decoded.uid || decoded.id,
@@ -25,7 +47,7 @@ export const validateJWT = (req, res, next) => {
 
     next();
   } catch (err) {
-    if (err.name === "TokenExpiredError") {
+    if (err?.name === "TokenExpiredError") {
       return res.status(401).send({ message: "Token expirado. Inicia sesión de nuevo." });
     }
     return res.status(401).send({ message: "Token no válido" });
