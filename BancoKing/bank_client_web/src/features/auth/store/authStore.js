@@ -82,7 +82,16 @@ export const useAuthStore = create(
         });
         return { success: true };
       } catch (err) {
-        const msg = err.response?.data?.message || 'Credenciales incorrectas';
+        let msg = err.response?.data?.message;
+        if (!msg && err.code === 'ECONNABORTED') {
+          msg =
+            'El servidor está despertando (puede tardar ~1 min). Espera e intenta de nuevo.';
+        } else if (!msg && !err.response) {
+          msg =
+            'No se pudo conectar al servidor. Verifica tu internet e intenta de nuevo.';
+        } else if (!msg) {
+          msg = 'Credenciales incorrectas';
+        }
         set({ error: msg, loading: false });
         setTimeout(() => set({ error: null }), 2000);
         return { success: false, error: msg };

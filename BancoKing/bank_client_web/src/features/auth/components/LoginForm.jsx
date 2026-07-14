@@ -72,7 +72,7 @@ export const LoginForm = () => {
       )}
 
       <button type='submit' disabled={loading} className='btn-primary'>
-        {loading ? 'Validando...' : 'Entrar a mi cuenta'}
+        {loading ? 'Conectando servidor...' : 'Entrar a mi cuenta'}
       </button>
     </form>
   );
