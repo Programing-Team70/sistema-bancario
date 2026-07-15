@@ -5,38 +5,39 @@ import { config } from "dotenv";
 
 config();
 
-console.log("--- Verificando Variables de Entorno ---");
-console.log("DB:", process.env.DB_NAME);
-console.log("User:", process.env.DB_USER);
-console.log("Port:", process.env.DB_PORT);
-console.log("---------------------------------------");
+const useSsl =
+  process.env.DB_SSL === "true" || process.env.DATABASE_URL?.includes("supabase");
 
-const useSsl = process.env.DB_SSL === "true";
-
-export const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASSWORD,
-  {
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    dialect: "postgres",
-    logging: false,
-    timezone: "-06:00",
-    define: {
-      timestamps: true,
-      underscored: true,
-    },
-    ...(useSsl && {
-      dialectOptions: {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false,
-        },
-      },
-    }),
+const sequelizeOptions = {
+  dialect: "postgres",
+  logging: false,
+  timezone: "-06:00",
+  define: {
+    timestamps: true,
+    underscored: true,
   },
-);
+  ...(useSsl && {
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false,
+      },
+    },
+  }),
+};
+
+export const sequelize = process.env.DATABASE_URL
+  ? new Sequelize(process.env.DATABASE_URL, sequelizeOptions)
+  : new Sequelize(
+      process.env.DB_NAME,
+      process.env.DB_USER,
+      process.env.DB_PASSWORD,
+      {
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT,
+        ...sequelizeOptions,
+      },
+    );
 
 export const dbConnection = async () => {
   try {

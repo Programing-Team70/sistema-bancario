@@ -9,25 +9,42 @@ export const validateUserExists = async (req, res, next) => {
 
     const authBase =
       process.env.AUTH_SERVICE_URL || "http://localhost:5288/api/v1";
-    const dotnetUrl = `${authBase.replace(/\/$/, "")}/user/${userId}`;
+    const dotnetUrl = `${authBase.replace(/\/$/, "")}/User/${userId}`;
     const response = await axios.get(dotnetUrl, {
       headers: { Authorization: token },
+      timeout: 90000,
     });
 
-    if (!response.data || response.data.status !== true) {
+    const userStatus = response.data?.status ?? response.data?.Status;
+
+    if (!response.data || userStatus !== true) {
       return res.status(404).json({
         success: false,
-        message: "El usuario no existe o está inactivo en el sistema central.",
+        message:
+          "El usuario no existe, está inactivo o no ha verificado su correo.",
       });
     }
 
     req.userFromDotNet = response.data;
     next();
   } catch (error) {
+    const status = error.response?.status;
+    const dotnetMessage =
+      error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.message;
+
+    if (status === 404) {
+      return res.status(404).json({
+        success: false,
+        message: "El usuario no existe en el sistema de autenticación.",
+      });
+    }
+
     return res.status(403).json({
       success: false,
-      message: "Error al validar usuario en .NET",
-      error: error.response?.data?.message || error.message,
+      message:
+        dotnetMessage || "Error al validar usuario en el servicio de autenticación.",
     });
   }
 };

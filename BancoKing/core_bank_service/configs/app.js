@@ -12,13 +12,10 @@ import { helmetOptions } from "./helmets.js";
 import { requestLimit } from "./rateLimit.js";
 import { setupAssociations } from "./associations.js";
 
-// Importanción de Rutas
 import accountRoutes from "../src/account/account.routes.js";
 import depositRoutes from "../src/deposits/deposit.routes.js";
 import transferRoutes from "../src/transfers/transfer.routes.js";
 import withdrawalRoutes from "../src/withdrawal/withdrawal.routes.js";
-
-const app = express();
 
 const configs = (app) => {
   app.use(helmet(helmetOptions));
@@ -43,7 +40,6 @@ const routes = (app) => {
     });
   });
 
-  // Manejador de rutas inexistentes
   app.use((req, res) => {
     res.status(404).json({
       success: false,
@@ -52,18 +48,29 @@ const routes = (app) => {
   });
 };
 
-export const initServer = async () => {
+let appInstance = null;
+
+export const buildApp = async () => {
+  if (appInstance) return appInstance;
+
+  const app = express();
   app.set("trust proxy", 1);
 
-  try {
-    configs(app);
-    setupAssociations();
-    await dbConnection();
-    console.log(
-      `JWT | secrets=${jwtConfig.secrets.length} issuer=${jwtConfig.issuer} audience=${jwtConfig.audience}`,
-    );
-    routes(app);
+  configs(app);
+  setupAssociations();
+  await dbConnection();
+  console.log(
+    `JWT | secrets=${jwtConfig.secrets.length} issuer=${jwtConfig.issuer} audience=${jwtConfig.audience}`,
+  );
+  routes(app);
 
+  appInstance = app;
+  return app;
+};
+
+export const initServer = async () => {
+  try {
+    const app = await buildApp();
     const port = process.env.PORT || 3000;
     app.listen(port, () => {
       console.log(` Servidor BancoKing ejecutándose en: ${port} `);
@@ -73,3 +80,5 @@ export const initServer = async () => {
     process.exit(1);
   }
 };
+
+export default buildApp;
