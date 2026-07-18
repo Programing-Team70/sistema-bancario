@@ -18,7 +18,7 @@ Stack requerido por el curso:
 | Fase | Responsable | Estado |
 |------|-------------|--------|
 | Configs en código (Dockerfile, vercel.json, firebase.json, env examples) | Agente / repo | ✅ Listo en rama `deploy/lab-stack` |
-| Cuentas Supabase + Railway + Vercel + Firebase + Brevo | **Tú** | ⬜ Pendiente |
+| Cuentas Supabase + Railway + Vercel + Firebase + Brevo | **Tú** | 🟡 Supabase listo |
 | Despliegue y variables de entorno | **Tú** (+ Wilson en Railway si ayuda) | ⬜ Pendiente |
 | Prueba end-to-end (login → cuenta → depósito) | **Tú / Otto (video)** | ⬜ Pendiente |
 
@@ -32,7 +32,7 @@ Stack requerido por el curso:
 Anota aquí cuando las tengas:
 
 ```
-SUPABASE:     https://supabase.com/dashboard/project/___________
+SUPABASE:     https://supabase.com/dashboard/project/dgkogmfjvrvbwucgitrh
 RAILWAY AUTH: https://________________.up.railway.app
 VERCEL CORE:  https://________________.vercel.app
 FIREBASE WEB: https://________________.web.app
