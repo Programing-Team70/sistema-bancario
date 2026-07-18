@@ -1,7 +1,11 @@
 "use strict";
 
+import pg from "pg";
 import { Sequelize } from "sequelize";
 import { config } from "dotenv";
+
+// Required so Vercel bundles the PostgreSQL driver with Sequelize.
+void pg;
 
 config();
 

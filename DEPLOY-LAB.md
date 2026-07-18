@@ -34,7 +34,7 @@ Anota aquí cuando las tengas:
 ```
 SUPABASE:     https://supabase.com/dashboard/project/dgkogmfjvrvbwucgitrh
 RAILWAY AUTH: https://________________.up.railway.app
-VERCEL CORE:  https://________________.vercel.app
+VERCEL CORE:  https://core-bank-service.vercel.app
 FIREBASE WEB: https://________________.web.app
 ```
 
