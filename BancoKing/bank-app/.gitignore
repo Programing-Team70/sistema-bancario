@@ -1,0 +1,96 @@
+# ==========================================
+# Dependencies & Package Managers
+# ==========================================
+node_modules/
+.pnpm-store/
+package-lock.json
+yarn.lock
+bun.lockb
+
+# ==========================================
+# Environment Variables & Secrets (CRÍTICO)
+# ==========================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# Llaves de firmado de Android y credenciales
+*.keystore
+*.jks
+*.p12
+*.pem
+*.gpg
+*.pkcs12
+flash.xml
+
+# ==========================================
+# React Native / Expo específicos
+# ==========================================
+.expo/
+.eas/
+dist/
+web-build/
+*.apk
+*.aab
+*.ipa
+
+# ==========================================
+# Android nativo (Si aplica)
+# ==========================================
+android/app/build/
+android/.gradle/
+android/local.properties
+android/GeneratedPluginRegistrant.java
+.gradle/
+build/
+
+# ==========================================
+# iOS nativo (Si aplica)
+# ==========================================
+ios/Pods/
+ios/build/
+ios/.xcode.env.local
+DerivedData/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+
+# ==========================================
+# IDEs & Editor Configuration
+# ==========================================
+.vscode/
+.idea/
+*.suo
+.ntvs
+*.njsproj
+*.sln
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# Logs & Runtime Data
+# ==========================================
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ==========================================
+# Temporary Files & Databases
+# ==========================================
+tmp/
+temp/
+.cache/
+.turbo/
+*.sql
+*.sqlite
